@@ -179,7 +179,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTat8cltNYAdm9t59mMdJ-FTyw_EQgT5cRxoz8YSDoyZKlQm-hGCAyM1-dcvBagRBsMT1T7AfJvIgbKI5euBZK2kMhhY0AzOxY2uM044ORoC9-f40SzHDSCfrEUbYPvSHTZgGIM5mm6jdjW3Y0lxHuZjwtcKW8R4ytbEC6qDFzYsSgheDLeC-qyjLCA2Gn2Sn8tqo2La5i82d3zlxbMPjYXkHp196GDPE4g2X1vSFnNRRQGQxQ9I8yltMuA75U5OzSr5TeaZQdc-ju86c_7MxO3tQ3DGA&lib=MElsIpuesqpdpp8cE3ldtuOEv5B5fQz8-',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -395,6 +395,7 @@
       state.games = DEMO_GAMES;
       state.dates = demoDates();
       state.reviewTimes = demoReviewTimes();
+      state.payments = { enabled: true, depositPercent: 100 };
       return Promise.resolve();
     }
     var ctrl = new AbortController();
@@ -442,7 +443,9 @@
     if (DEMO) {
       return new Promise(function (resolve) {
         setTimeout(function () {
-          resolve(needsReview() ? { ok: true, status: 'enquiry', reason: reviewReason() } : { ok: true, status: 'provisional' });
+          if (needsReview()) { resolve({ ok: true, status: 'enquiry', reason: reviewReason() }); return; }
+          var b = basket();
+          resolve(b.due ? { ok: true, status: 'provisional', payUrl: 'demo', payAmount: money(b.due) } : { ok: true, status: 'provisional' });
         }, 700);
       });
     }
@@ -811,6 +814,13 @@
     } else {
       content = [heading('Checking your payment'), el('p', { class: 'lede' }, 'One moment...')];
     }
+    if (DEMO) {
+      content.push(el('p', { class: 'hint' }, 'Demo mode: this was a practice payment. No card was used and nothing was saved.'));
+      content.push(el('div', { class: 'actions' }, el('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
+        state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.errors = {}; state.sendError = '';
+        state.payUrl = ''; state.payAmount = ''; state.form = blankForm(); go('package');
+      } }, 'Start again')));
+    }
     return el('div', { class: 'stack' }, content);
   }
 
@@ -893,7 +903,7 @@
               if (res && res.ok) {
                 state.result = res.status === 'enquiry' ? 'enquiry' : 'provisional';
                 state.resultReason = res.reason === 'time' ? 'time' : 'busy';
-                state.payUrl = typeof res.payUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(res.payUrl) ? res.payUrl : '';
+                state.payUrl = typeof res.payUrl === 'string' && (/^https:\/\/checkout\.stripe\.com\//.test(res.payUrl) || (DEMO && res.payUrl === 'demo')) ? res.payUrl : '';
                 state.payAmount = state.payUrl ? String(res.payAmount || '') : '';
                 go('done');
               } else {
@@ -928,7 +938,9 @@
         el('h2', null, 'Pay online'),
         el('p', null, 'Your request is saved. Pay ' + state.payAmount + ' now by card to secure your date. You will be taken to our secure payment page (Stripe) and brought back here afterwards.'),
         el('div', { class: 'actions' },
-          el('a', { class: 'btn btn-primary pay-link', href: state.payUrl, rel: 'noopener' }, 'Pay ' + state.payAmount + ' now')
+          DEMO
+            ? el('a', { class: 'btn btn-primary pay-link', href: '#', onclick: function (e) { e.preventDefault(); state.returnState = { status: 'paid', amount: state.payAmount }; go('paid'); } }, 'Pay ' + state.payAmount + ' now (demo)')
+            : el('a', { class: 'btn btn-primary pay-link', href: state.payUrl, rel: 'noopener' }, 'Pay ' + state.payAmount + ' now')
         )
       ),
       DEMO && el('p', { class: 'hint' }, 'Demo mode: nothing was saved.'),
