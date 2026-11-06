@@ -179,7 +179,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQm84EJXNj15f8fQ_xyWS_HvEq2GB2ppOsPwALKRGxvnVONYsey0zDq9faErMn3rM5ZC5Nsu1pfcOyAVRG2ekFoCOKRXEp6bB7HY5OLaytDQRx-KKM_UV3lBDJl3KxZ69FbqynnB42FrUR1rVr53QCPQrlMT2qCscm7fXpLRgoLKZx3Kix5zDXuptNL_G9zj0PTTjXjYxR3aVugYTQLOvBfVSKsapW2-za8mMp1zy8gftQo7dXKaIxL5CKFi05Lz3CMu5IrNugkt7hBIZizJwetMLhk9w&lib=MElsIpuesqpdpp8cE3ldtuOEv5B5fQz8-',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -237,7 +237,7 @@
     { key: 'access', label: 'Parking and access', type: 'textarea', rows: 2, max: 400, hint: 'Anything we should know about parking, stairs or entry.' }
   ];
 
-  function blankForm() { return { name: '', email: '', phone: '', venue: '', access: '', invoice: false, terms: false, website: '' }; }
+  function blankForm() { return { name: '', email: '', phone: '', venue: '', access: '', invoice: false, terms: false, hp: '' }; }
 
   var state = {
     step: 'package',
@@ -436,7 +436,7 @@
     // Optional parts are only sent when filled in, which keeps the request short.
     if (f.access) { payload.access = f.access; }
     if (f.invoice) { payload.invoice = true; }
-    if (f.website) { payload.website = f.website; }
+    if (f.hp) { payload.hp = f.hp; }
     if (p && p.pick > 0) { payload.games = state.sel; }
     if (p && p.extras && state.ext.length) { payload.extras = state.ext; }
 
@@ -754,10 +754,10 @@
         ),
         state.errors.terms && el('span', { class: 'err' }, state.errors.terms)
       ),
-      // Hidden from people. Bots tend to fill it in, and those requests are ignored.
+      // Hidden from people. Bots tend to fill it in, and those requests are ignored. The name is deliberately odd so browser autofill leaves it alone.
       el('div', { class: 'trap', 'aria-hidden': 'true' },
-        el('label', { for: 'f-website' }, 'Leave this field empty'),
-        el('input', { type: 'text', id: 'f-website', name: 'website', tabindex: '-1', autocomplete: 'off', oninput: function (e) { state.form.website = e.target.value; } })
+        el('label', { for: 'f-hp' }, 'Leave this field empty'),
+        el('input', { type: 'text', id: 'f-hp', name: 'hp_x7q', tabindex: '-1', autocomplete: 'off', 'data-lpignore': 'true', oninput: function (e) { state.form.hp = e.target.value; } })
       ),
       el('div', { class: 'actions' },
         el('button', { type: 'submit', class: 'btn btn-primary' }, 'Review request'),
