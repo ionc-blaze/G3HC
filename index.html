@@ -4,135 +4,170 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Book your garden games | The Giant Garden Games Hire Company</title>
-<meta name="description" content="Choose a package, pick a date and send your booking request.">
+<meta name="description" content="Choose a package, pick your games and a date, and send your booking request.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Mrs+Saint+Delafield&family=Playfair+Display:wght@700;800&family=Poiret+One&display=swap" rel="stylesheet">
 <style>
-  /* Placeholder palette. Swap these for the brand colours once Troy shares them. */
+  /* Colours and fonts are matched by eye to the main website. Swap them here if Troy has the exact ones. */
   :root {
-    --green: #2F6B3C;
-    --green-dark: #1E4727;
-    --green-tint: #EAF3EB;
-    --open: #DCEEDF;
-    --open-edge: #BFE0C6;
-    --busy: #F7E2C4;
-    --busy-edge: #E6B873;
-    --busy-ink: #6B4A1E;
-    --cream: #FBF6EC;
+    --sand: #E5DCC8;
+    --panel: #F6F3EE;
     --paper: #FFFFFF;
-    --ink: #2B2420;
-    --muted: #5A5048;
-    --line: #E4DBCB;
-    --danger: #A12D2D;
-    --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
-    --sans: 'Work Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --ink: #2B1A10;
+    --muted: #5C4A3A;
+    --taupe: #8B7355;
+    --line: #CDBFA5;
+    --brown: #3B2416;
+    --brown-dark: #1F120A;
+    --busy: #EBCB9A;
+    --busy-edge: #C99A4B;
+    --busy-ink: #4F3210;
+    --open-edge: #B8A98A;
+    --danger: #9B2C2C;
+    --title: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --display: 'Poiret One', 'Cormorant Garamond', Georgia, serif;
+    --script: 'Mrs Saint Delafield', 'Brush Script MT', cursive;
+    --body: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
-  a { color: var(--green); }
-  a:hover { color: var(--green-dark); }
-  button, input, textarea { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--sand); color: var(--ink); font-family: var(--body); font-weight: 600; font-size: 20px; line-height: 1.45; }
+  a { color: var(--brown); }
+  a:hover { color: var(--brown-dark); }
+  button, input, textarea, select { font: inherit; color: inherit; }
   button { cursor: pointer; }
-  :focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 
-  .site-header { background: var(--green); color: var(--cream); padding: 18px 24px; }
-  .site-header a { color: var(--cream); text-decoration: none; }
-  .brand { font-family: var(--serif); font-weight: 700; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; }
-  .tagline { font-size: 14px; opacity: 0.85; }
+  .site-header { background: #fff; text-align: center; padding: 14px 20px 18px; border-bottom: 1px solid var(--line); }
+  .site-header img { width: 112px; height: auto; display: block; margin: 0 auto 6px; }
+  .brand { font-family: var(--title); font-weight: 800; font-size: 24px; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.15; }
+  .brand a { color: var(--ink); text-decoration: none; }
+  .back-link { font-size: 16px; margin-top: 4px; }
 
-  main { max-width: 760px; margin: 0 auto; padding: 28px 20px 56px; }
-  .banner { background: var(--busy); border: 1px solid var(--busy-edge); color: var(--busy-ink); border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 20px; }
+  main { max-width: 820px; margin: 0 auto; padding: 28px 16px 48px; }
+  .panel { background: var(--panel); padding: 28px 26px 32px; }
+  .banner { background: var(--busy); border: 1px solid var(--busy-edge); color: var(--busy-ink); padding: 12px 16px; font-size: 17px; margin-bottom: 20px; }
 
-  .steps { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 28px; }
-  .steps li { padding: 7px 14px; border-radius: 999px; background: #EFE7D8; color: #5E5446; font-size: 13px; font-weight: 600; }
-  .steps li[aria-current="step"] { background: var(--green); color: var(--cream); }
-  .steps li.done { background: var(--green-tint); color: var(--green-dark); }
+  .steps { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 26px; }
+  .steps li { padding: 5px 14px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 16px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .steps li[aria-current="step"] { background: var(--brown); border-color: var(--brown); color: var(--panel); }
+  .steps li.done { background: var(--sand); color: var(--ink); }
 
-  h1 { font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.2; margin: 0 0 6px; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1.1; margin: 0 0 8px; text-align: center; }
   h1:focus { outline: none; }
-  .lede { color: var(--muted); margin: 0 0 20px; }
-  .stack { display: flex; flex-direction: column; gap: 18px; }
+  h2 { font-family: var(--script); font-weight: 400; font-size: 38px; line-height: 1; margin: 6px 0 2px; }
+  .lede { color: var(--muted); margin: 0 0 18px; text-align: center; }
+  .stack { display: flex; flex-direction: column; gap: 20px; }
 
-  .btn { border: 0; border-radius: 999px; padding: 12px 26px; font-weight: 600; font-size: 15px; min-height: 44px; }
-  .btn-primary { background: var(--green); color: var(--cream); }
-  .btn-primary:hover { background: var(--green-dark); }
-  .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
-  .btn-quiet { background: none; color: var(--green); padding: 8px 0; min-height: 44px; font-weight: 600; text-decoration: underline; }
-  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .btn { border: 2px solid var(--brown); border-radius: 0; padding: 11px 28px; font-weight: 700; font-size: 17px; letter-spacing: 0.08em; text-transform: uppercase; min-height: 46px; }
+  .btn-primary { background: var(--brown); color: var(--panel); }
+  .btn-primary:hover { background: var(--brown-dark); border-color: var(--brown-dark); }
+  a.btn-primary, a.btn-primary:hover { color: var(--panel); }
+  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+  a.btn { display: inline-block; text-decoration: none; text-align: center; }
+  .btn-quiet { background: none; border: 0; color: var(--brown); padding: 8px 0; min-height: 44px; font-weight: 700; text-decoration: underline; text-align: left; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px; }
 
   .pkgs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-  .pkg { text-align: left; background: var(--paper); border: 2px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
-  .pkg:hover { border-color: var(--green); }
-  .pkg[aria-pressed="true"] { border-color: var(--green); background: var(--green-tint); }
-  .pkg-name { font-weight: 600; }
-  .pkg-desc { color: var(--muted); font-size: 14px; }
-  .pkg-price { font-family: var(--serif); font-weight: 600; font-size: 22px; color: var(--green); margin-top: 4px; }
+  .pkg { text-align: left; background: var(--sand); border: 2px solid var(--ink); border-radius: 0; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .pkg:hover { background: #DDD2BA; }
+  .pkg[aria-pressed="true"] { background: var(--brown); color: var(--panel); }
+  .pkg[aria-pressed="true"] .pkg-desc { color: var(--panel); }
+  .pkg-name { font-weight: 700; font-size: 21px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .pkg-desc { color: var(--muted); font-size: 18px; }
+  .pkg-price { font-family: var(--title); font-weight: 700; font-size: 26px; margin-top: 6px; }
 
-  .cal { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .pick-count { text-align: center; font-size: 20px; font-weight: 700; position: sticky; top: 0; background: var(--panel); padding: 8px 0; z-index: 2; border-bottom: 1px solid var(--line); }
+  .group-title { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 18px; margin: 4px 0 0; }
+  .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .opt { display: flex; gap: 12px; align-items: flex-start; border: 2px solid var(--ink); padding: 10px 14px; background: var(--paper); cursor: pointer; min-height: 56px; }
+  .opt:has(input:checked) { background: var(--sand); }
+  .opt:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
+  .opt input { width: 24px; height: 24px; margin-top: 2px; accent-color: var(--brown); flex: none; }
+  .opt-name { font-weight: 700; display: block; }
+  .opt-note { display: block; color: var(--muted); font-size: 17px; font-weight: 600; }
+  .opt-price { font-family: var(--title); font-weight: 700; font-size: 18px; margin-left: auto; white-space: nowrap; padding-left: 8px; }
+
+  .cal { background: var(--paper); border: 2px solid var(--ink); padding: 16px; }
   .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .cal-title { font-family: var(--serif); font-weight: 600; font-size: 20px; }
-  .cal-nav { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); font-size: 18px; }
-  .cal-nav[disabled] { opacity: 0.35; cursor: not-allowed; }
+  .cal-title { font-family: var(--display); font-size: 30px; }
+  .cal-nav { width: 46px; height: 46px; border-radius: 0; border: 2px solid var(--ink); background: var(--paper); font-size: 22px; line-height: 1; }
+  .cal-nav[disabled] { opacity: 0.3; cursor: not-allowed; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
-  .dow { text-align: center; font-size: 12px; font-weight: 600; color: #7A6F63; padding: 4px 0; }
-  .day { min-height: 44px; border-radius: 10px; border: 2px solid transparent; font-weight: 600; font-size: 14px; background: none; }
-  .day--open { background: var(--open); border-color: var(--open-edge); }
+  .dow { text-align: center; font-size: 16px; font-weight: 700; color: var(--muted); padding: 4px 0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .day { min-height: 46px; border-radius: 0; border: 2px solid transparent; font-weight: 700; font-size: 18px; background: none; }
+  .day--open { background: var(--panel); border-color: var(--open-edge); }
   .day--busy { background: var(--busy); border-color: var(--busy-edge); }
-  .day--closed { color: #A89E92; cursor: not-allowed; }
-  .day[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--cream); }
-  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
-  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid; }
-  .swatch--open { background: var(--open); border-color: var(--open-edge); }
+  .day--closed { color: #A39679; cursor: not-allowed; }
+  .day[aria-pressed="true"] { background: var(--brown); border-color: var(--brown); color: var(--panel); }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 17px; color: var(--muted); }
+  .swatch { display: inline-block; width: 14px; height: 14px; margin-right: 6px; vertical-align: -1px; border: 2px solid; }
+  .swatch--open { background: var(--panel); border-color: var(--open-edge); }
   .swatch--busy { background: var(--busy); border-color: var(--busy-edge); }
 
-  .note { border-radius: 12px; padding: 14px 16px; font-size: 14px; }
-  .note--open { background: var(--green-tint); color: var(--green-dark); }
-  .note--busy { background: var(--busy); color: var(--busy-ink); }
+  .basket h2 { margin-bottom: 8px; }
+  .basket-total dt, .basket-total dd { font-weight: 700; font-size: 22px; }
+  .pay-note h2 { margin-top: 0; }
+  .note { padding: 14px 16px; font-size: 18px; border: 1px solid var(--line); background: var(--paper); }
+  .note--busy { background: var(--busy); border-color: var(--busy-edge); color: var(--busy-ink); }
 
   .field { display: flex; flex-direction: column; gap: 6px; }
-  .field label, .field .label { font-weight: 600; font-size: 14px; }
-  .hint { color: var(--muted); font-size: 13px; }
-  .field input[type="text"], .field input[type="email"], .field input[type="tel"], .field textarea {
-    padding: 11px 12px; border: 1px solid #D2C7B6; border-radius: 8px; background: var(--paper); width: 100%;
+  .field label, .field .label { font-weight: 700; font-size: 19px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .hint { color: var(--muted); font-size: 17px; }
+  .field input[type="text"], .field input[type="email"], .field input[type="tel"], .field textarea, .field select {
+    padding: 11px 12px; border: 2px solid var(--ink); border-radius: 0; background: var(--paper); width: 100%; font-size: 20px;
   }
   .field textarea { resize: vertical; }
   .field [aria-invalid="true"] { border-color: var(--danger); }
-  .err { color: var(--danger); font-size: 13px; font-weight: 600; }
-  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
-  .check input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--green); flex: none; }
+  .err { color: var(--danger); font-size: 17px; font-weight: 700; }
+  .check { display: flex; gap: 12px; align-items: flex-start; font-size: 19px; }
+  .check input { width: 24px; height: 24px; margin-top: 1px; accent-color: var(--brown); flex: none; }
   .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-  .form-error { background: #FBE9E9; border: 1px solid #E5B5B5; color: var(--danger); border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 600; }
+  .form-error { background: #F6DEDA; border: 2px solid var(--danger); color: var(--danger); padding: 12px 16px; font-size: 18px; font-weight: 700; }
 
-  .summary { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 6px 20px; margin: 0; }
-  .summary div { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .summary { background: var(--paper); border: 2px solid var(--ink); padding: 6px 20px; margin: 0; }
+  .summary div { display: grid; grid-template-columns: 170px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
   .summary div:last-child { border-bottom: 0; }
-  .summary dt { color: var(--muted); font-size: 14px; }
+  .summary dt { color: var(--muted); font-size: 17px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
   .summary dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
-  .contact { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
-  @media (max-width: 600px) {
-    .pkgs { grid-template-columns: 1fr; }
+  .site-footer { background: #000; color: #fff; text-align: center; padding: 26px 20px 22px; font-size: 18px; }
+  .site-footer a { color: #fff; }
+  .site-footer p { margin: 4px 0; overflow-wrap: anywhere; }
+  .site-footer .small { font-size: 16px; opacity: 0.85; margin-top: 14px; }
+
+  @media (max-width: 640px) {
+    .panel { padding: 22px 16px 26px; }
+    .pkgs, .opts { grid-template-columns: 1fr; }
     .summary div { grid-template-columns: 1fr; gap: 2px; }
-    h1 { font-size: 26px; }
+    h1 { font-size: 32px; }
+    .brand { font-size: 19px; }
   }
-  @media (prefers-reduced-motion: no-preference) { .btn, .pkg, .day { transition: background 0.15s, border-color 0.15s; } }
+  @media (prefers-reduced-motion: no-preference) { .btn, .pkg, .day, .opt { transition: background 0.15s, border-color 0.15s; } }
 </style>
 </head>
 <body>
 
 <header class="site-header">
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMEAAACwCAIAAAA5Xp2vAAAQAElEQVR4AezdB5ycVdU/8OeZ2d3sJqRn00NICBCaSFcEqRKqdBBUUJAiRUCKIv2VjiLwp4kCUgRB6dJeCfIC0sRCJ5Q0UklI22Q3W2bm/5294WHYTZYku7MkYefz4+bcc8899849v7k10VSu49MxAq0bgVTU8ekYgdaNQAeHWjd+HbWjqINDHSxo7Qh0cKi1I9hRv4NDHRxo7Qh0cKi1I9hRf2k41DFKHSPQ0gh0cKil0ekoW5oR6ODQ0oxSh01LI9DBoZZGp6NsaUagg0NLM0odNi2NQAeHWhqdjrKlGYEODi3NKHXYtDQCbcWhltpYAcuy2ay36mw2W1tb+9xzz40ePfpPf/rTBRdccOihh37729/eddddR40atXPjZ6fGD3G33XbbfffdDzzwwJ///Oc33XTTU0899dhjj02dOtW34yqA/CXEKs4hoUWUwri+9tprt9566/nnn48oW2yxhfTUU0/9zW9+g0ZVVVWbbLLJAQcccPjhhx911FE//vGPjz322OOOO458xBFHHHbYYYcccsj222/fqVOnf/3rX1dfffU555zDeNNNN91hhx1OOukkmldeeaWwrXaWfdnQYiKEbLHTVZxDCGRA4Xe/+92OO+642WabYcbDDz8cx/ExxxxjOnnwwQfNQw888MANN9xw8cUXn3jiid///vcxY999991777332msvqazpB3BIrfPOO+/aa6+9//77X3jhhSeeeOLee+81Mw0aNAixTjnlFCzcZpttTjvttMcff1zrIX46AEFuqzRx2FxoqyaW0s8qziHjm06nxXLcuHFHH320wD/77LN/+ctf8AA/Nthgg4qKCnxKpVJSQ8Yy0/ghtAye1ercufPQoUNHjRp1+umnm96efvrpRx555Nxzz9XoVVddtfHGG++2227mpwkTJvCqCjR88uFfi60Hz8FV+AocBiEoZYuNVZxDJSUlRlBEL7roItPJ4MGDja/BbTLuQhugNCDV+FFxSVDOknMVOQQC9O/f34R34YUXPvbYY08++eR3v/vdl156yUbKenfdddfNmDFDl/hUl7HqywGdD7WCwCFvNInDIOghZTtgFedQ4Qga6ACDK4qLhaKAYFlYvbkcbIJ9kjITQkVY1bt3b8vfHXfc8cYbb5xxxhl2S9tuu+0+++xjrmKvA4yXA0lFraiuIWkhdCBkCRDk4qVfIg4VbxALPYsrfgSQhRCE2cnu5ptvRiYLn1lqww03tOQpgsLqSy9zrhX2PJAJIVso0ANNUdGeHCrqF1kRnYufuCbQRfKRRx5pM37LLbe88847I0eOxKdJkyaFVclOCSEQjmULYKNUFSAk0xK5EJ/rp9C4NXIHh1ozektbF5mYCqqoYwCuOCHefffdLhSmT5/uJPiLX/wibJVYMmPDfklgowh1mDEOIAM9EICZIgJNUdHBoaIO76fORVTUwRYYFAjwwIEDndpsvbt06eJG4OSTT3bnyUYRg88FPyY2ZlL+gQyEgKCnKSo6OFTU4W3qXGiDiiDAYGaiOfPMM19++eXq6uqNNtro+uuvDzRqmUkmmGDAFSeyiwXnxUYHh4o9wp/jH12QABtMRe453Vg+9NBDX//6191jYRg9ZizWhVrAQApotFizJVVfrPHyKTs4tHzj1ma16uvrMQCTMIa87rrrPvroo+67TzjhBJfmNEqX1JgiwBJ1rWvkxWJJ1dtK38GhthrJ5fRTVlYm8EggDTJH++2337///W97I5Ry901jmpElJDADkdWSBllqty6LVYkgW2ysaBwq9vdd0f3jROCTecXSBscee+zxxx9P6a1X7+fMmRPIRIM0NKpIgSbIUhMbDUFabHRwqNgj3Cr/bibfeuutadOmbb755mPHjuWrR48eppmERmRK7JFCoA6hfdijIejgkEFYQYEfdXV1OueR2Gw0atSoBx54gKa8vJwy0GhJXFGXTfugg0PtM87L1goGAH7YIYUF6/DDD/eI+7Of/ez//b//t3DhQuualA2/wYAQIAtBbp+0g0PtM87L30qyTo0YMWLMmDEO//vvvz/2dO7cOUxFZEgawLxEbh+hg0PtM87L1goewGLrPPXUU3379t1yyy2Vmo2cv5I9EA0yhYoE2fZBB4faZ5zbrBXntZtuummHHXbw8u+JzSzl2I83gTRBoNReu61oKyOHjM+XF5iBLhdffPFxxx237bbbjhs3jgYCe4xLEAKNWNIUGx0cKvYIt7F/u2ws4dRJ7ayzztptt92c/GnQJaSKgoBGlEBTVHRwqKjD28bOAyESihx44IFXXXXV9ttv//bbbzvzKw1FWg0CGhFki4oODhV1eNvYeUII5LANspv+1re+9T//8z9777333LlzNYZJUkVSxtY4IBcVHRwq6vAW0bnNtYkHDjrooJ///Oc77bRTVVVVaWlpOKkFGqEaFLETja47ONQ4DCtnYh7CJKkbyO985zs77rijuYcGsdqBOsmYdXAoGYqVWzjjjDM22mij3Xffvf2/xqrKofYfycW0aD6wHZEupqytVWag3/72tzU1NaeccgqZe+0Codjo4NAyjLCQHHzwwSeffDJmLKmaXS0zKbARTqiuriYXFZrTrje18M+3tSUbdkXkoqKDQ58zvLao9fX1jITEIWjq1KlXXHGFLBrRBJAT2I6wd4vzzjvvuAm04d1nn3223nrr8FfJVCwS7Ip41u4f/vCHU089dfz48bjbPruiDg4Z+ZaAJQ47KPL1r3+9S5cuf//731n70YsQARhIE0yZMuXCCy/Etssuu2zo0KHXX3/9/fffj1gVFRWJTTEEdEEjE8+mm27qtL/HHnuQk04Wo8XEZweHkqFYvCAwCDRy5Mg111wTGwJjPHYGa0UEKfz3v/894ogjXB+vs846Dz744B133PHd7363Z8+eDk377ruv0LIsKgJjpNrdZJNNjjrqKHJRWwzOOzgUxqGlFCc233zz22+/XUjMQEwJgDcYRpg1a9YPfvADKxe6PPDAA/ZMZh3TwMyZM13brLfeehYXU5GKRQV+m42spLp06623vvTSS3fffXfSot4mctsKHRyKBDuBwSULRoBxX3vttU0hJhUaWTOQCJFZIpD0oYceQpHTTz9dwOx7lAKD55577oc//OGvfvWrn/70p8zaAdrVii0RGumqZ5Bf/vKXSO8bySoqElZZDomioQSCsTOOdiqvvvrqM88889e//tUx+JJLLrn00kuNskve00477bzzzrNZvuiii+xjjj76aFuKn/3sZ6YQe6A+ffocdthhZpcTTzzx+OOPN+VIb7jhhrPPPnuHHXZAoK985Sv2sHfeeeejjz762muvPfXUU3vttZczNgJZU3QgRFc3igdNhIakNnCyXvV33nnnsKLJmqIUFaMDqyyHjFpYPl544QU73F122QUDfve73913330vvvhibW2t/c1Xv/pVO2WPTUceeaQ9hKveQw89dL/99rvxxhsPOeSQK6+80j7mP//5D8HW+Lrrrjv33HOx7dprr6V59913H3/88V/84hejR4/GoR49emywwQZjxozRFvJttdVW9ka//vWv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67EBtaQJNtpoo2uuuSabbYiiLGQz9XGUXa1LxVe/slEqIuaiXBQQE7I5KQRNksZRDEn2M0LSUtGEVNE8t7HjDTfc8KabbvKk6ib6zjvv9LTevXv3whAm7XnODPJ111131113CW38ySfoaYIgdem3zjrreCq5+eab3UaiVCaToUfZJNha4YBlnz59HnzwQR046qij/vrXv1ZUVDAGlgxUUZExIBn5/vvv/+1vf/uHP/wBSwg0oWnPL+zJUt/i1FNPffrppzmpq62locdp+jiVItsEqZiABpLsIiGHaii2KNfOf6wcHDKjeEx94oknHnroIRfHBx100JNPPunCd0mDJZyPPPJIGOsHHnhAYESIcdAkgmDPnDnTPLTzzjt/73vf+9e//uWp9X//93/p8Uktlgmqq6sHDBjAcs8998SJiRMnYo9aLNnwHOwJwLh379677767l5PDDjvsuOOO22brrXLZhjjOpeJcWVlJkGV79uiWaWj49p57PvTgg9rlBFRHUG7J0jw4RRRTUmOa17Tqv7asvNJwyLogfsbUQIPIGdXFjoQic4aXrH322Wfbbbc9/PDDmakYQC5EeMDHBkoP71JTSDZrWfH7/8wv2/S2YMECBvxrevDgwWYjr2kmFf0Bek0Q2EhnzZplNwZe0OyNrDbmFU4JDPKyP6LIBmvkyLX32muvfffd//HHH0dizkFzynWMnMtmpZxDKp1O6jJYhNhSFi+S2/2PlYNDHrptRwyO2BhWj6a///3vpSGo9IUw3DazYnPDDTdcffXV8+bNe+ONN+L40yGOGz/8+LNz586vv/665/o77rhju+22499bmzQ4zGbzwQsytgU9/0FYf/317c889AYD+iBwayWSXXvtte2fNtxgvZHrrPP6a69lM5mqObPHvjumavasKNOQR0N9Q+3CbH3dnXf+8Zvf+Nr+++z79ydHx3GqLF2ie7whjLkqTuWiOLsItCsYVg4OiZ9DVhg6hDjppJOOOeaYo48+2gIXlE3S8847TyCdiSwKii699NIQEkoIDKCHrl27Tp8+3YxlF+yn/89//pMyAAmCkKSmnGzjFBVSM41Fs0ePHolBIpjSNGTPZEN2++2333rrLfZzqVTsvNZQXz9zxoz58+ZGqThKI0w0e/bsKIqefvbZHXbYYe+99378kUcGDRpkVqNcBL5S+Ujlu2Qtg0UFn/xB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" alt="The Giant Garden Games Hire Company, London" width="193" height="176">
   <div class="brand"><a href="https://www.thegiantgardengameshirecompany.co.uk">The Giant Garden Games Hire Company</a></div>
-  <div class="tagline">Book online</div>
+  <div class="back-link"><a href="https://www.thegiantgardengameshirecompany.co.uk">Back to the main website</a></div>
 </header>
 
 <main id="main">
-  <div id="banner" class="banner" hidden></div>
-  <ol id="steps" class="steps" aria-label="Booking steps"></ol>
-  <section id="app"></section>
-  <noscript><p>This booking page needs JavaScript. Please email or call us to book instead.</p></noscript>
-  <p class="contact" id="contact"></p>
+  <div class="panel">
+    <div id="banner" class="banner" hidden></div>
+    <ol id="steps" class="steps" aria-label="Booking steps"></ol>
+    <section id="app"></section>
+    <noscript><p>This booking page needs JavaScript. Please email or call us to book instead.</p></noscript>
+  </div>
 </main>
+
+<footer class="site-footer">
+  <p id="contact"></p>
+  <p class="small">&copy; The Giant Garden Games Hire Company</p>
+</footer>
 
 <script>
 (function () {
@@ -144,7 +179,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTat8cltNYAdm9t59mMdJ-FTyw_EQgT5cRxoz8YSDoyZKlQm-hGCAyM1-dcvBagRBsMT1T7AfJvIgbKI5euBZK2kMhhY0AzOxY2uM044ORoC9-f40SzHDSCfrEUbYPvSHTZgGIM5mm6jdjW3Y0lxHuZjwtcKW8R4ytbEC6qDFzYsSgheDLeC-qyjLCA2Gn2Sn8tqo2La5i82d3zlxbMPjYXkHp196GDPE4g2X1vSFnNRRQGQxQ9I8yltMuA75U5OzSr5TeaZQdc-ju86c_7MxO3tQ3DGA&lib=MElsIpuesqpdpp8cE3ldtuOEv5B5fQz8-',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -153,44 +188,84 @@
 
   var DEMO = !CONFIG.SCRIPT_URL;
 
+  /* Sample data used only in demo mode. The live page reads the Sheet instead. */
   var DEMO_PACKAGES = [
-    { id: 'p1', name: 'Package One (4 games)', description: 'Any games of your choice', price: '£180' },
-    { id: 'p2', name: 'Package Two (6 games)', description: 'Any games of your choice', price: '£240' },
-    { id: 'p3', name: 'Package Three (8 games)', description: 'Any games of your choice', price: '£310' },
-    { id: 'p4', name: 'Kids Games Package (6 games)', description: 'Any kids games of your choice', price: '£130' },
-    { id: 'p5', name: 'Candy Cart + Deco Ladder or Post Box', description: 'Candy cart plus a deco ladder or cast iron post box', price: '£160' },
-    { id: 'p6', name: 'Candy Cart + Deco Ladder + Post Box', description: 'The full candy cart bundle', price: '£210' }
+    { id: 'p1', name: 'Package One (4 games)', description: 'Any 4 giant games of your choice. One day’s hire.', price: '£180', pick: 4, pickFrom: 'Giant', extras: true },
+    { id: 'p2', name: 'Package Two (6 games)', description: 'Any 6 giant games of your choice. One day’s hire.', price: '£240', pick: 6, pickFrom: 'Giant', extras: true },
+    { id: 'p3', name: 'Package Three (8 games)', description: 'Any 8 giant games of your choice. One day’s hire.', price: '£310', pick: 8, pickFrom: 'Giant', extras: true },
+    { id: 'p4', name: 'Package Four (6 kids games)', description: 'Any 6 kids games of your choice. One day’s hire.', price: '£130', pick: 6, pickFrom: 'Kids', extras: true },
+    { id: 'p5', name: 'Package Five', description: 'Candy Cart plus a Deco Ladder or a Cast Iron Post Box.', price: '£160', pick: 1, pickFrom: 'Choice', extras: false },
+    { id: 'p6', name: 'Package Six', description: 'Candy Cart plus a Deco Ladder and a Cast Iron Post Box.', price: '£210', pick: 0, pickFrom: '', extras: false },
+    { id: 'p7', name: 'Christmas Games Package', description: 'Christmas Jenga, Quoits, Cornhole, Limbo and Beat the Buzzer, with a free Connect 4.', price: '£350', pick: 0, pickFrom: '', extras: false }
   ];
+  function g(cat, names) { return names.split('|').map(function (n) { return { name: n, category: cat, price: '', note: '' }; }); }
+  var DEMO_GAMES = [].concat(
+    g('Giant', 'Giant Jenga|Connect 4|Croquet|Cornhole|Draughts|Snakes & Ladders|Twister|Noughts & Crosses|Limbo|Quoits|Skittles|Tug of War|Lawn Chrome Boules|Lawn Wooden Boules|Ladder Toss|Tin Can Alley|Cannonball Drop|Space Hoppers|Sack Race|Giant Tetris'),
+    g('Kids', 'Small Cornhole|Small Croquet|Small Tug of War|Space Hoppers|Snakes & Ladders|Small Noughts & Crosses|Small Skittles|Sack Race|Small Quoits|Tin Can Alley'),
+    g('Choice', 'Deco Ladder|Cast Iron Post Box'),
+    [
+      { name: 'Jumbo Beat the Buzzer', category: 'Extra', price: '£190', note: '' },
+      { name: 'Beat the Buzzer', category: 'Extra', price: '£140', note: '' },
+      { name: 'Fooseball', category: 'Extra', price: '£200', note: '' },
+      { name: 'Beer Pong', category: 'Extra', price: '£100', note: '' },
+      { name: 'Bouncy Castle', category: 'Extra', price: '£50', note: '' }
+    ]
+  );
 
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  var STEP_LABELS = ['Package', 'Date', 'Details', 'Review'];
+  var STEP_LABELS = { package: 'Package', games: 'Games', date: 'Date', details: 'Details', review: 'Review' };
+
+  // Arrival times, every half hour from 7am to 6pm.
+  var TIME_OPTIONS = (function () {
+    var out = [];
+    for (var h = 7; h <= 18; h++) {
+      [0, 30].forEach(function (m) {
+        if (h === 18 && m === 30) { return; }
+        var hh = h > 12 ? h - 12 : h;
+        out.push({ value: (h < 10 ? '0' : '') + h + ':' + (m ? '30' : '00'), label: hh + ':' + (m ? '30' : '00') + (h >= 12 ? ' pm' : ' am') });
+      });
+    }
+    return out;
+  })();
 
   var FIELDS = [
     { key: 'name', label: 'Your name', type: 'text', required: true, max: 100, autocomplete: 'name' },
     { key: 'email', label: 'Email', type: 'email', required: true, max: 120, autocomplete: 'email' },
     { key: 'phone', label: 'Phone', type: 'tel', required: true, max: 40, autocomplete: 'tel' },
     { key: 'venue', label: 'Venue address', type: 'textarea', rows: 3, required: true, max: 300, hint: 'Please include the postcode.' },
-    { key: 'arrival', label: 'Arrival or set-up time', type: 'text', max: 60, hint: 'For example: set up by 11:00.' },
-    { key: 'games', label: 'Which games would you like?', type: 'textarea', rows: 3, max: 600, hint: 'Name the games, or tell us about your event and we will suggest some.' },
     { key: 'access', label: 'Parking and access', type: 'textarea', rows: 2, max: 400, hint: 'Anything we should know about parking, stairs or entry.' }
   ];
 
+  function blankForm() { return { name: '', email: '', phone: '', venue: '', access: '', invoice: false, terms: false, website: '' }; }
+
   var state = {
-    step: 1,
+    step: 'package',
     packages: [],
+    games: [],
     dates: {},
     busyThreshold: 4,
     maxDaysAhead: 540,
     pkgId: '',
+    sel: [],
+    ext: [],
     date: '',
+    time: '',
+    slots: [],
+    reviewTimes: {},
+    bufferMinutes: 60,
     viewYear: 0,
     viewMonth: 0,
-    form: { name: '', email: '', phone: '', venue: '', arrival: '', games: '', access: '', invoice: false, terms: false, website: '' },
+    form: blankForm(),
     errors: {},
     sending: false,
     sendError: '',
-    result: ''
+    result: '',
+    resultReason: '',
+    payments: { enabled: false, depositPercent: 100 },
+    payUrl: '',
+    payAmount: '',
+    returnState: { status: 'checking', amount: '' }
   };
 
   var appEl = document.getElementById('app');
@@ -230,9 +305,70 @@
     if (s < todayIso() || s > maxIso()) { return 'closed'; }
     return (state.dates[s] || 0) >= state.busyThreshold ? 'busy' : 'open';
   }
+  function slotValues() {
+    return state.slots.length ? state.slots : TIME_OPTIONS.map(function (t) { return t.value; });
+  }
+  function isReviewTime(date, time) {
+    var list = state.reviewTimes[date];
+    return !!(list && list.indexOf(time) !== -1);
+  }
+  function timeReview() { return !!(state.date && state.time && isReviewTime(state.date, state.time)); }
+  // true when the request will be checked by us rather than booked straight away
+  function needsReview() { return dayStatus(state.date) === 'busy' || timeReview(); }
+  function reviewReason() { return dayStatus(state.date) === 'busy' ? 'busy' : (timeReview() ? 'time' : ''); }
   function pkg() {
     for (var i = 0; i < state.packages.length; i++) { if (state.packages[i].id === state.pkgId) { return state.packages[i]; } }
     return null;
+  }
+
+  /* ---------- steps depend on the package ---------- */
+  function needsGames(p) { return !!p && (p.pick > 0 || p.extras); }
+  function stepIds() {
+    var ids = ['package'];
+    if (needsGames(pkg())) { ids.push('games'); }
+    return ids.concat(['date', 'details', 'review']);
+  }
+  function nextStep(id) { var ids = stepIds(); return ids[ids.indexOf(id) + 1]; }
+  function prevStep(id) { var ids = stepIds(); return ids[ids.indexOf(id) - 1]; }
+
+  function gamesFor(p) {
+    var cats = String(p.pickFrom || '').split(',').map(function (c) { return c.trim().toLowerCase(); }).filter(Boolean);
+    return state.games.filter(function (x) { return cats.indexOf(x.category.toLowerCase()) !== -1; });
+  }
+  function extrasFor(p) {
+    return p.extras ? state.games.filter(function (x) { return x.category.toLowerCase() === 'extra'; }) : [];
+  }
+  function extraLabel(name) {
+    var found = state.games.filter(function (x) { return x.category.toLowerCase() === 'extra' && x.name === name; })[0];
+    return name + (found && found.price ? ' (' + found.price + ')' : '');
+  }
+  function timeLabel(v) {
+    var found = TIME_OPTIONS.filter(function (t) { return t.value === v; })[0];
+    return found ? found.label : v;
+  }
+
+  /* ---------- basket ---------- */
+  // "£180" -> 18000 pence. Text such as "from £140" returns null and is not charged online.
+  function pence(text) {
+    var m = /^\s*£\s*([0-9][0-9,]*)(?:\.([0-9]{1,2}))?\s*$/.exec(String(text || ''));
+    if (!m) { return null; }
+    return parseInt(m[1].replace(/,/g, ''), 10) * 100 + (m[2] ? parseInt((m[2] + '0').substring(0, 2), 10) : 0);
+  }
+  function money(p) { return '£' + Math.floor(p / 100) + (p % 100 ? '.' + ('0' + (p % 100)).slice(-2) : ''); }
+  function basket() {
+    var p = pkg();
+    var lines = [], unpriced = [];
+    if (p) { var pp = pence(p.price); if (pp) { lines.push({ name: p.name, pence: pp }); } else { unpriced.push(p.name); } }
+    if (p && p.extras) {
+      state.ext.forEach(function (name) {
+        var item = state.games.filter(function (x) { return x.category.toLowerCase() === 'extra' && x.name === name; })[0];
+        var ep = item ? pence(item.price) : null;
+        if (ep) { lines.push({ name: name, pence: ep }); } else { unpriced.push(name + (item && item.price ? ' (' + item.price + ')' : '')); }
+      });
+    }
+    var subtotal = lines.reduce(function (t, l) { return t + l.pence; }, 0);
+    var pct = state.payments.depositPercent;
+    return { lines: lines, unpriced: unpriced, subtotal: subtotal, due: pct >= 100 ? subtotal : Math.round(subtotal * pct / 100), pct: pct };
   }
 
   /* ---------- loading data ---------- */
@@ -246,11 +382,19 @@
     });
     return out;
   }
+  function demoReviewTimes() {
+    var out = {};
+    out[isoOf(new Date(Date.now() + 6 * 86400000))] = ['09:30', '10:00', '10:30'];
+    out[isoOf(new Date(Date.now() + 13 * 86400000))] = ['13:00', '13:30', '14:00'];
+    return out;
+  }
 
   function load() {
     if (DEMO) {
       state.packages = DEMO_PACKAGES;
+      state.games = DEMO_GAMES;
       state.dates = demoDates();
+      state.reviewTimes = demoReviewTimes();
       return Promise.resolve();
     }
     var ctrl = new AbortController();
@@ -260,56 +404,70 @@
       .then(function (data) {
         if (!data || !data.ok || !Array.isArray(data.packages)) { throw new Error('bad data'); }
         state.packages = data.packages;
+        state.games = Array.isArray(data.games) ? data.games : [];
         state.dates = data.dates || {};
         state.busyThreshold = data.busyThreshold || 4;
+        state.slots = Array.isArray(data.slots) ? data.slots : [];
+        state.reviewTimes = data.reviewTimes || {};
+        state.bufferMinutes = data.bufferMinutes || 60;
         state.maxDaysAhead = data.maxDaysAhead || 540;
+        if (data.payments && data.payments.enabled) {
+          state.payments = { enabled: true, depositPercent: Math.min(Math.max(parseInt(data.payments.depositPercent, 10) || 100, 1), 100) };
+        }
       })
       .finally(function () { clearTimeout(timer); });
   }
 
   /* ---------- sending ---------- */
   function send() {
+    var p = pkg();
+    var f = state.form;
     var payload = {
       date: state.date,
+      arrival: state.time,
       packageId: state.pkgId,
-      name: state.form.name,
-      email: state.form.email,
-      phone: state.form.phone,
-      venue: state.form.venue,
-      arrival: state.form.arrival,
-      games: state.form.games,
-      access: state.form.access,
-      invoice: state.form.invoice,
-      terms: state.form.terms,
-      website: state.form.website
+      name: f.name,
+      email: f.email,
+      phone: f.phone,
+      venue: f.venue,
+      terms: f.terms
     };
+    // Optional parts are only sent when filled in, which keeps the request short.
+    if (f.access) { payload.access = f.access; }
+    if (f.invoice) { payload.invoice = true; }
+    if (f.website) { payload.website = f.website; }
+    if (p && p.pick > 0) { payload.games = state.sel; }
+    if (p && p.extras && state.ext.length) { payload.extras = state.ext; }
+
     if (DEMO) {
       return new Promise(function (resolve) {
         setTimeout(function () {
-          resolve({ ok: true, status: dayStatus(state.date) === 'busy' ? 'enquiry' : 'provisional' });
+          resolve(needsReview() ? { ok: true, status: 'enquiry', reason: reviewReason() } : { ok: true, status: 'provisional' });
         }, 700);
       });
     }
-    // text/plain keeps this a "simple" request, which Apps Script accepts from any site.
-    return fetch(CONFIG.SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    }).then(function (res) { return res.json(); });
+    // Sent as a GET: browsers reliably let this page read the reply to a GET from Apps Script.
+    var url = CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') +
+      'action=book&data=' + encodeURIComponent(JSON.stringify(payload));
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 30000);
+    return fetch(url, { signal: ctrl.signal })
+      .then(function (res) { return res.json(); })
+      .finally(function () { clearTimeout(timer); });
   }
 
   /* ---------- shell ---------- */
   function renderSteps() {
     stepsEl.textContent = '';
-    STEP_LABELS.forEach(function (label, i) {
-      var n = i + 1;
-      var done = state.step > n;
+    var ids = stepIds();
+    var at = ids.indexOf(state.step);
+    ids.forEach(function (id, i) {
       stepsEl.appendChild(el('li', {
-        class: done ? 'done' : '',
-        'aria-current': state.step === n ? 'step' : false
-      }, n + '. ' + label));
+        class: at > i ? 'done' : '',
+        'aria-current': state.step === id ? 'step' : false
+      }, (i + 1) + '. ' + STEP_LABELS[id]));
     });
-    stepsEl.hidden = state.step === 5;
+    stepsEl.hidden = ['done', 'paid', 'cancelled'].indexOf(state.step) !== -1;
   }
 
   function go(step, keepFocus) {
@@ -320,7 +478,7 @@
   function render(skipFocus) {
     renderSteps();
     appEl.textContent = '';
-    var views = { 1: viewPackages, 2: viewDate, 3: viewDetails, 4: viewReview, 5: viewDone };
+    var views = { package: viewPackages, games: viewGames, date: viewDate, details: viewDetails, review: viewReview, done: viewDone, paid: viewPaid, cancelled: viewCancelled };
     appEl.appendChild(views[state.step]());
     if (!skipFocus) {
       var h = appEl.querySelector('h1');
@@ -330,7 +488,7 @@
 
   function heading(text) { return el('h1', { tabindex: '-1' }, text); }
 
-  /* ---------- step 1: package ---------- */
+  /* ---------- step: package ---------- */
   function viewPackages() {
     return el('div', { class: 'stack' },
       el('div', null,
@@ -342,7 +500,11 @@
           type: 'button',
           class: 'pkg',
           'aria-pressed': state.pkgId === p.id ? 'true' : 'false',
-          onclick: function () { state.pkgId = p.id; go(2); }
+          onclick: function () {
+            if (state.pkgId !== p.id) { state.sel = []; state.ext = []; }
+            state.pkgId = p.id;
+            go(nextStep('package'));
+          }
         },
           el('span', { class: 'pkg-name' }, p.name),
           el('span', { class: 'pkg-desc' }, p.description),
@@ -352,7 +514,82 @@
     );
   }
 
-  /* ---------- step 2: date ---------- */
+  /* ---------- step: games ---------- */
+  function viewGames() {
+    var p = pkg();
+    var picks = gamesFor(p);
+    var extras = extrasFor(p);
+    var limit = p.pick;
+    var single = limit === 1;
+    var countEl = el('div', { class: 'pick-count', 'aria-live': 'polite' });
+    var contBtn;
+
+    function refresh() {
+      var n = state.sel.length;
+      countEl.textContent = n + ' of ' + limit + ' chosen';
+      var full = n >= limit;
+      Array.prototype.forEach.call(appEl.querySelectorAll('input[data-kind="pick"]'), function (inp) {
+        inp.disabled = !single && full && !inp.checked;
+      });
+      if (contBtn) { contBtn.disabled = limit > 0 && n < 1; }
+    }
+
+    function option(item, kind, idx) {
+      var isPick = kind === 'pick';
+      var id = 'g-' + kind + '-' + idx;
+      var list = isPick ? state.sel : state.ext;
+      var input = el('input', {
+        type: isPick && single ? 'radio' : 'checkbox',
+        id: id, name: isPick && single ? 'choice' : id, 'data-kind': kind,
+        checked: list.indexOf(item.name) !== -1,
+        onchange: function (e) {
+          if (isPick) {
+            if (single) { state.sel = [item.name]; }
+            else if (e.target.checked) { if (state.sel.length < limit) { state.sel.push(item.name); } else { e.target.checked = false; } }
+            else { state.sel = state.sel.filter(function (n) { return n !== item.name; }); }
+          } else {
+            state.ext = e.target.checked ? state.ext.concat(item.name) : state.ext.filter(function (n) { return n !== item.name; });
+          }
+          refresh();
+        }
+      });
+      return el('label', { class: 'opt', for: id },
+        input,
+        el('span', null,
+          el('span', { class: 'opt-name' }, item.name),
+          item.note && el('span', { class: 'opt-note' }, item.note)
+        ),
+        item.price && el('span', { class: 'opt-price' }, item.price)
+      );
+    }
+
+    contBtn = el('button', { type: 'button', class: 'btn btn-primary', onclick: function () { go(nextStep('games')); } }, 'Continue');
+
+    var view = el('div', { class: 'stack' },
+      el('div', null,
+        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(prevStep('games')); } }, '← Change package'),
+        heading(limit > 0 ? (single ? 'Make your choice' : 'Choose your games') : 'Extras'),
+        el('p', { class: 'lede' }, p.name + ' (' + p.price + ')')
+      ),
+      limit > 0 && el('p', { class: 'lede' }, single ? 'Choose one.' : 'Choose up to ' + limit + ' games.'),
+      limit > 0 && countEl,
+      limit > 0 && (picks.length
+        ? el('div', { class: 'opts' }, picks.map(function (it, i) { return option(it, 'pick', i); }))
+        : el('div', { class: 'note' }, 'We could not load the games list. You can still continue and tell us your choices when we confirm.')),
+      extras.length > 0 && el('div', null,
+        el('h2', null, 'Optional extras'),
+        el('p', { class: 'hint' }, 'Priced separately. We will confirm the full total, including delivery, with you.')
+      ),
+      extras.length > 0 && el('div', { class: 'opts' }, extras.map(function (it, i) { return option(it, 'extra', i); })),
+      el('div', { class: 'actions' }, contBtn)
+    );
+    // Counts and disabled states need the elements to exist first.
+    setTimeout(refresh, 0);
+    refresh();
+    return view;
+  }
+
+  /* ---------- step: date ---------- */
   function ensureView() {
     if (state.viewYear) { return; }
     var base = state.date ? state.date.split('-').map(Number) : null;
@@ -402,7 +639,7 @@
 
     return el('div', { class: 'stack' },
       el('div', null,
-        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(1); } }, '← Change package'),
+        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(prevStep('date')); } }, '← Back'),
         heading('Pick a date'),
         el('p', { class: 'lede' }, p ? p.name + ' (' + p.price + ')' : '')
       ),
@@ -421,13 +658,25 @@
       chosenStatus === 'open' && el('div', { class: 'note note--open' }, longDate(state.date) + ' looks free.'),
       chosenStatus === 'busy' && el('div', { class: 'note note--busy' },
         longDate(state.date) + ' is a busy day. You can still send a request and we will let you know if we can fit you in.'),
+      state.date && chosenStatus !== 'closed' && el('div', { class: 'field' },
+        el('label', { for: 'f-time' }, 'Arrival or set-up time'),
+        el('span', { class: 'hint', id: 'f-time-hint' }, 'The time you would like us to be set up by.'),
+        el('select', { id: 'f-time', name: 'time', 'aria-describedby': 'f-time-hint', onchange: function (e) { state.time = e.target.value; render(true); } },
+          el('option', { value: '', selected: !state.time }, 'Choose a time'),
+          slotValues().map(function (v) {
+            return el('option', { value: v, selected: state.time === v }, timeLabel(v) + (isReviewTime(state.date, v) ? ' (we will need to check)' : ''));
+          })
+        )
+      ),
+      chosenStatus !== 'busy' && timeReview() && el('div', { class: 'note note--busy' },
+        timeLabel(state.time) + ' is close to another booking that day. You can still send a request and we will check whether it works and come back to you.'),
       el('div', { class: 'actions' },
-        el('button', { type: 'button', class: 'btn btn-primary', disabled: !state.date, onclick: function () { go(3); } }, 'Continue')
+        el('button', { type: 'button', class: 'btn btn-primary', disabled: !state.date || !state.time, onclick: function () { go(nextStep('date')); } }, 'Continue')
       )
     );
   }
 
-  /* ---------- step 3: details ---------- */
+  /* ---------- step: details ---------- */
   function validateForm() {
     var errs = {};
     var f = state.form;
@@ -448,18 +697,15 @@
     var common = {
       id: id,
       name: def.key,
-      maxlength: String(def.max),
       required: def.required,
-      autocomplete: def.autocomplete || 'off',
       'aria-invalid': err ? 'true' : false,
-      'aria-describedby': describedBy || false,
-      oninput: function (e) { state.form[def.key] = e.target.value; }
+      'aria-describedby': describedBy || false
     };
     var control;
     if (def.type === 'textarea') {
-      control = el('textarea', Object.assign({ rows: String(def.rows || 3) }, common), state.form[def.key]);
+      control = el('textarea', Object.assign({ rows: String(def.rows || 3), maxlength: String(def.max), autocomplete: def.autocomplete || 'off', oninput: function (e) { state.form[def.key] = e.target.value; } }, common), state.form[def.key]);
     } else {
-      control = el('input', Object.assign({ type: def.type, value: state.form[def.key] }, common));
+      control = el('input', Object.assign({ type: def.type, value: state.form[def.key], maxlength: String(def.max), autocomplete: def.autocomplete || 'off', oninput: function (e) { state.form[def.key] = e.target.value; } }, common));
     }
     return el('div', { class: 'field' },
       el('label', { for: id }, def.label + (def.required ? '' : ' (optional)')),
@@ -484,7 +730,7 @@
           if (firstBad) { firstBad.focus(); }
           return;
         }
-        go(4);
+        go(nextStep('details'));
       }
     },
       errCount > 0 && el('div', { class: 'form-error', role: 'alert' }, 'Please check the highlighted fields.'),
@@ -512,7 +758,7 @@
       ),
       el('div', { class: 'actions' },
         el('button', { type: 'submit', class: 'btn btn-primary' }, 'Review request'),
-        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(2); } }, 'Back')
+        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(prevStep('details')); } }, 'Back')
       )
     );
 
@@ -525,7 +771,84 @@
     );
   }
 
-  /* ---------- step 4: review ---------- */
+  /* ---------- step: review ---------- */
+  // The basket: what would be charged online, worked out the same way the server does it.
+  function basketView(review) {
+    if (!state.payments.enabled) { return null; }
+    if (review) {
+      return el('div', { class: 'note' }, 'Nothing to pay yet. Because we need to check ' + (reviewReason() === 'busy' ? 'this busy day' : 'this time') + ', we will confirm first and then arrange payment.');
+    }
+    var b = basket();
+    if (!b.subtotal) { return null; }
+    return el('div', { class: 'basket' },
+      el('h2', null, 'Your basket'),
+      el('dl', { class: 'summary' },
+        b.lines.map(function (l) { return el('div', null, el('dt', null, l.name), el('dd', null, money(l.pence))); }),
+        b.pct < 100 && el('div', null, el('dt', null, 'Deposit (' + b.pct + '%)'), el('dd', null, money(b.due))),
+        el('div', { class: 'basket-total' }, el('dt', null, 'To pay online'), el('dd', null, money(b.due)))
+      ),
+      b.unpriced.length > 0 && el('p', { class: 'hint' }, 'Not included in this total, price confirmed separately: ' + b.unpriced.join(', ') + '.'),
+      el('p', { class: 'hint' }, 'After you send your request you will be taken to a secure card payment page.')
+    );
+  }
+
+  /* ---------- coming back from the payment page ---------- */
+  function viewPaid() {
+    var r = state.returnState;
+    var content;
+    if (r.status === 'paid') {
+      content = [heading('Payment received'),
+        el('p', { class: 'lede' }, 'Thank you. We have received ' + r.amount + '.'),
+        el('p', null, 'We will confirm your booking by email. If anything changes, call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.')];
+    } else if (r.status === 'unpaid') {
+      content = [heading('Payment not completed'),
+        el('p', { class: 'lede' }, 'We have not received your payment yet.'),
+        el('p', null, 'Your booking request is saved and we will be in touch. If you were charged, please call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.')];
+    } else if (r.status === 'error') {
+      content = [heading('We could not check your payment'),
+        el('p', { class: 'lede' }, 'Your booking request is saved. If you paid, we will see it on our side.'),
+        el('p', null, 'Please call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + ' if you are unsure.')];
+    } else {
+      content = [heading('Checking your payment'), el('p', { class: 'lede' }, 'One moment...')];
+    }
+    return el('div', { class: 'stack' }, content);
+  }
+
+  function viewCancelled() {
+    return el('div', { class: 'stack' },
+      heading('Payment not completed'),
+      el('p', { class: 'lede' }, 'You left the payment page, so nothing was charged.'),
+      el('p', null, 'Your booking request is saved and we will be in touch to confirm. You can also pay when we confirm. Call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + ' with any questions.'),
+      el('div', { class: 'actions' },
+        el('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
+          try { history.replaceState(null, '', location.pathname); } catch (e) { /* not important */ }
+          go('package');
+        } }, 'Make another request')
+      )
+    );
+  }
+
+  function checkReturn() {
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = params.get('paid');
+    if (sessionId && !DEMO) {
+      state.step = 'paid';
+      state.returnState = { status: 'checking', amount: '' };
+      render(true);
+      fetch(CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + 'action=confirmpay&session=' + encodeURIComponent(sessionId))
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          state.returnState = data && data.ok
+            ? (data.paid ? { status: 'paid', amount: String(data.amount || '') } : { status: 'unpaid', amount: '' })
+            : { status: 'error', amount: '' };
+          render(true);
+        })
+        .catch(function () { state.returnState = { status: 'error', amount: '' }; render(true); });
+      return true;
+    }
+    if (params.get('cancelled') && !DEMO) { state.step = 'cancelled'; render(true); return true; }
+    return false;
+  }
   function row(label, value) {
     return el('div', null, el('dt', null, label), el('dd', null, value || 'Not given'));
   }
@@ -533,27 +856,29 @@
   function viewReview() {
     var f = state.form;
     var p = pkg();
-    var busy = dayStatus(state.date) === 'busy';
+    var review = needsReview();
 
     return el('div', { class: 'stack' },
       el('div', null,
         heading('Check and send'),
-        el('p', { class: 'lede' }, busy
-          ? 'This is a busy day, so we will check whether we can fit you in before confirming.'
+        el('p', { class: 'lede' }, review
+          ? (reviewReason() === 'busy' ? 'This is a busy day, so we will check whether we can fit you in before confirming.' : 'That time is close to another booking, so we will check it works before confirming.')
           : 'We will confirm your booking by email.')
       ),
       el('dl', { class: 'summary' },
         row('Package', p ? p.name + ' (' + p.price + ')' : ''),
+        p && p.pick > 0 && row('Games', state.sel.join(', ')),
+        p && p.extras && state.ext.length > 0 && row('Extras', state.ext.map(extraLabel).join('\n')),
         row('Date', longDate(state.date)),
+        row('Arrival or set-up', state.time ? timeLabel(state.time) : ''),
         row('Name', f.name),
         row('Email', f.email),
         row('Phone', f.phone),
         row('Venue', f.venue),
-        row('Arrival or set-up', f.arrival),
-        row('Games wanted', f.games),
         row('Parking and access', f.access),
         row('Invoice needed', f.invoice ? 'Yes' : 'No')
       ),
+      basketView(review),
       el('p', { class: 'hint' }, 'Delivery is not included in the package price. It starts from £80 in the London area and we will confirm the exact cost.'),
       state.sendError && el('div', { class: 'form-error', role: 'alert' }, state.sendError),
       el('div', { class: 'actions' },
@@ -567,7 +892,10 @@
               state.sending = false;
               if (res && res.ok) {
                 state.result = res.status === 'enquiry' ? 'enquiry' : 'provisional';
-                go(5);
+                state.resultReason = res.reason === 'time' ? 'time' : 'busy';
+                state.payUrl = typeof res.payUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(res.payUrl) ? res.payUrl : '';
+                state.payAmount = state.payUrl ? String(res.payAmount || '') : '';
+                go('done');
               } else {
                 state.sendError = (res && res.error) || 'Something went wrong. Please call or email us instead.';
                 render(true);
@@ -579,28 +907,40 @@
             });
           }
         }, state.sending ? 'Sending...' : 'Send request'),
-        el('button', { type: 'button', class: 'btn-quiet', disabled: state.sending, onclick: function () { go(3); } }, 'Back')
+        el('button', { type: 'button', class: 'btn-quiet', disabled: state.sending, onclick: function () { go(prevStep('review')); } }, 'Back')
       )
     );
   }
 
-  /* ---------- step 5: done ---------- */
+  /* ---------- step: done ---------- */
   function viewDone() {
     var busy = state.result === 'enquiry';
+    var timeOnly = busy && state.resultReason === 'time';
     return el('div', { class: 'stack' },
-      heading(busy ? 'Thanks, we will check that date' : 'Request received'),
-      el('p', { class: 'lede' }, busy
+      heading(timeOnly ? 'Thanks, we will check that time' : busy ? 'Thanks, we will check that date' : 'Request received'),
+      el('p', { class: 'lede' }, timeOnly
+        ? 'That time is close to another booking, so we will check it works and come back to you by email.'
+        : busy
         ? 'That day is busy, so we will see whether we can fit you in and come back to you by email.'
-        : 'We have noted ' + longDate(state.date) + ' and will confirm by email shortly.'),
+        : 'We have noted ' + longDate(state.date) + ' at ' + timeLabel(state.time) + ' and will confirm by email shortly.'),
       el('p', null, 'Nothing is final until we have confirmed with you. If anything changes, call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.'),
+      state.payUrl && el('div', { class: 'note pay-note' },
+        el('h2', null, 'Pay online'),
+        el('p', null, 'Your request is saved. Pay ' + state.payAmount + ' now by card to secure your date. You will be taken to our secure payment page (Stripe) and brought back here afterwards.'),
+        el('div', { class: 'actions' },
+          el('a', { class: 'btn btn-primary pay-link', href: state.payUrl, rel: 'noopener' }, 'Pay ' + state.payAmount + ' now')
+        )
+      ),
       DEMO && el('p', { class: 'hint' }, 'Demo mode: nothing was saved.'),
       el('div', { class: 'actions' },
         el('button', {
           type: 'button', class: 'btn btn-primary',
           onclick: function () {
-            state.pkgId = ''; state.date = ''; state.errors = {}; state.sendError = '';
-            state.form = { name: '', email: '', phone: '', venue: '', arrival: '', games: '', access: '', invoice: false, terms: false, website: '' };
-            go(1);
+            state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.errors = {}; state.sendError = '';
+            state.payUrl = ''; state.payAmount = '';
+            try { history.replaceState(null, '', location.pathname); } catch (e) { /* not important */ }
+            state.form = blankForm();
+            go('package');
           }
         }, 'Make another request')
       )
@@ -608,8 +948,8 @@
   }
 
   /* ---------- start up ---------- */
-  document.getElementById('contact').textContent =
-    'Prefer to talk? Call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.';
+  document.getElementById('contact').appendChild(document.createTextNode('Call ' + CONFIG.CONTACT_PHONE + ' or email '));
+  document.getElementById('contact').appendChild(el('a', { href: 'mailto:' + CONFIG.CONTACT_EMAIL }, CONFIG.CONTACT_EMAIL));
 
   if (DEMO) {
     var banner = document.getElementById('banner');
@@ -620,7 +960,7 @@
   appEl.appendChild(el('p', { class: 'lede' }, 'Loading packages...'));
   renderSteps();
 
-  load().then(function () { render(true); }).catch(function () {
+  load().then(function () { if (!checkReturn()) { render(true); } }).catch(function () {
     appEl.textContent = '';
     appEl.appendChild(el('div', { class: 'stack' },
       el('div', { class: 'form-error', role: 'alert' }, 'We could not load the booking page. Please try again, or call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.'),
