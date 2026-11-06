@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book your garden games | The Giant Garden Games Hire Company</title>
+<meta name="description" content="Choose a package, pick a date and send your booking request.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Placeholder palette. Swap these for the brand colours once Troy shares them. */
+  :root {
+    --green: #2F6B3C;
+    --green-dark: #1E4727;
+    --green-tint: #EAF3EB;
+    --open: #DCEEDF;
+    --open-edge: #BFE0C6;
+    --busy: #F7E2C4;
+    --busy-edge: #E6B873;
+    --busy-ink: #6B4A1E;
+    --cream: #FBF6EC;
+    --paper: #FFFFFF;
+    --ink: #2B2420;
+    --muted: #5A5048;
+    --line: #E4DBCB;
+    --danger: #A12D2D;
+    --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans: 'Work Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cream); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
+  a { color: var(--green); }
+  a:hover { color: var(--green-dark); }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+
+  .site-header { background: var(--green); color: var(--cream); padding: 18px 24px; }
+  .site-header a { color: var(--cream); text-decoration: none; }
+  .brand { font-family: var(--serif); font-weight: 700; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .tagline { font-size: 14px; opacity: 0.85; }
+
+  main { max-width: 760px; margin: 0 auto; padding: 28px 20px 56px; }
+  .banner { background: var(--busy); border: 1px solid var(--busy-edge); color: var(--busy-ink); border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 20px; }
+
+  .steps { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 28px; }
+  .steps li { padding: 7px 14px; border-radius: 999px; background: #EFE7D8; color: #5E5446; font-size: 13px; font-weight: 600; }
+  .steps li[aria-current="step"] { background: var(--green); color: var(--cream); }
+  .steps li.done { background: var(--green-tint); color: var(--green-dark); }
+
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.2; margin: 0 0 6px; }
+  h1:focus { outline: none; }
+  .lede { color: var(--muted); margin: 0 0 20px; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+
+  .btn { border: 0; border-radius: 999px; padding: 12px 26px; font-weight: 600; font-size: 15px; min-height: 44px; }
+  .btn-primary { background: var(--green); color: var(--cream); }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+  .btn-quiet { background: none; color: var(--green); padding: 8px 0; min-height: 44px; font-weight: 600; text-decoration: underline; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+
+  .pkgs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .pkg { text-align: left; background: var(--paper); border: 2px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+  .pkg:hover { border-color: var(--green); }
+  .pkg[aria-pressed="true"] { border-color: var(--green); background: var(--green-tint); }
+  .pkg-name { font-weight: 600; }
+  .pkg-desc { color: var(--muted); font-size: 14px; }
+  .pkg-price { font-family: var(--serif); font-weight: 600; font-size: 22px; color: var(--green); margin-top: 4px; }
+
+  .cal { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-title { font-family: var(--serif); font-weight: 600; font-size: 20px; }
+  .cal-nav { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); font-size: 18px; }
+  .cal-nav[disabled] { opacity: 0.35; cursor: not-allowed; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .dow { text-align: center; font-size: 12px; font-weight: 600; color: #7A6F63; padding: 4px 0; }
+  .day { min-height: 44px; border-radius: 10px; border: 2px solid transparent; font-weight: 600; font-size: 14px; background: none; }
+  .day--open { background: var(--open); border-color: var(--open-edge); }
+  .day--busy { background: var(--busy); border-color: var(--busy-edge); }
+  .day--closed { color: #A89E92; cursor: not-allowed; }
+  .day[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--cream); }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid; }
+  .swatch--open { background: var(--open); border-color: var(--open-edge); }
+  .swatch--busy { background: var(--busy); border-color: var(--busy-edge); }
+
+  .note { border-radius: 12px; padding: 14px 16px; font-size: 14px; }
+  .note--open { background: var(--green-tint); color: var(--green-dark); }
+  .note--busy { background: var(--busy); color: var(--busy-ink); }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label, .field .label { font-weight: 600; font-size: 14px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .field input[type="text"], .field input[type="email"], .field input[type="tel"], .field textarea {
+    padding: 11px 12px; border: 1px solid #D2C7B6; border-radius: 8px; background: var(--paper); width: 100%;
+  }
+  .field textarea { resize: vertical; }
+  .field [aria-invalid="true"] { border-color: var(--danger); }
+  .err { color: var(--danger); font-size: 13px; font-weight: 600; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+  .check input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--green); flex: none; }
+  .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .form-error { background: #FBE9E9; border: 1px solid #E5B5B5; color: var(--danger); border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 600; }
+
+  .summary { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 6px 20px; margin: 0; }
+  .summary div { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .summary div:last-child { border-bottom: 0; }
+  .summary dt { color: var(--muted); font-size: 14px; }
+  .summary dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  .contact { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  @media (max-width: 600px) {
+    .pkgs { grid-template-columns: 1fr; }
+    .summary div { grid-template-columns: 1fr; gap: 2px; }
+    h1 { font-size: 26px; }
+  }
+  @media (prefers-reduced-motion: no-preference) { .btn, .pkg, .day { transition: background 0.15s, border-color 0.15s; } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="brand"><a href="https://www.thegiantgardengameshirecompany.co.uk">The Giant Garden Games Hire Company</a></div>
+  <div class="tagline">Book online</div>
+</header>
+
+<main id="main">
+  <div id="banner" class="banner" hidden></div>
+  <ol id="steps" class="steps" aria-label="Booking steps"></ol>
+  <section id="app"></section>
+  <noscript><p>This booking page needs JavaScript. Please email or call us to book instead.</p></noscript>
+  <p class="contact" id="contact"></p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+     SETTINGS. This is the only part you normally need to edit.
+     ------------------------------------------------------------------ */
+  var CONFIG = {
+    // Paste the Apps Script web app address between the quotes.
+    // Leave it empty to run in demo mode with sample data.
+    SCRIPT_URL: '',
+
+    TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
+    CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
+    CONTACT_PHONE: '07824 388 688'
+  };
+
+  var DEMO = !CONFIG.SCRIPT_URL;
+
+  var DEMO_PACKAGES = [
+    { id: 'p1', name: 'Package One (4 games)', description: 'Any games of your choice', price: '£180' },
+    { id: 'p2', name: 'Package Two (6 games)', description: 'Any games of your choice', price: '£240' },
+    { id: 'p3', name: 'Package Three (8 games)', description: 'Any games of your choice', price: '£310' },
+    { id: 'p4', name: 'Kids Games Package (6 games)', description: 'Any kids games of your choice', price: '£130' },
+    { id: 'p5', name: 'Candy Cart + Deco Ladder or Post Box', description: 'Candy cart plus a deco ladder or cast iron post box', price: '£160' },
+    { id: 'p6', name: 'Candy Cart + Deco Ladder + Post Box', description: 'The full candy cart bundle', price: '£210' }
+  ];
+
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  var STEP_LABELS = ['Package', 'Date', 'Details', 'Review'];
+
+  var FIELDS = [
+    { key: 'name', label: 'Your name', type: 'text', required: true, max: 100, autocomplete: 'name' },
+    { key: 'email', label: 'Email', type: 'email', required: true, max: 120, autocomplete: 'email' },
+    { key: 'phone', label: 'Phone', type: 'tel', required: true, max: 40, autocomplete: 'tel' },
+    { key: 'venue', label: 'Venue address', type: 'textarea', rows: 3, required: true, max: 300, hint: 'Please include the postcode.' },
+    { key: 'arrival', label: 'Arrival or set-up time', type: 'text', max: 60, hint: 'For example: set up by 11:00.' },
+    { key: 'games', label: 'Which games would you like?', type: 'textarea', rows: 3, max: 600, hint: 'Name the games, or tell us about your event and we will suggest some.' },
+    { key: 'access', label: 'Parking and access', type: 'textarea', rows: 2, max: 400, hint: 'Anything we should know about parking, stairs or entry.' }
+  ];
+
+  var state = {
+    step: 1,
+    packages: [],
+    dates: {},
+    busyThreshold: 4,
+    maxDaysAhead: 540,
+    pkgId: '',
+    date: '',
+    viewYear: 0,
+    viewMonth: 0,
+    form: { name: '', email: '', phone: '', venue: '', arrival: '', games: '', access: '', invoice: false, terms: false, website: '' },
+    errors: {},
+    sending: false,
+    sendError: '',
+    result: ''
+  };
+
+  var appEl = document.getElementById('app');
+  var stepsEl = document.getElementById('steps');
+
+  /* ---------- tiny DOM helper (text is always set as text, never HTML) ---------- */
+  function add(node, child) {
+    if (Array.isArray(child)) { child.forEach(function (c) { add(node, c); }); return; }
+    if (child === null || child === undefined || child === false) { return; }
+    node.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+  }
+  function el(tag, props) {
+    var node = document.createElement(tag);
+    props = props || {};
+    Object.keys(props).forEach(function (k) {
+      var v = props[k];
+      if (v === false || v === null || v === undefined) { return; }
+      if (k === 'class') { node.className = v; }
+      else if (k.indexOf('on') === 0) { node.addEventListener(k.slice(2), v); }
+      else { node.setAttribute(k, v === true ? '' : v); }
+    });
+    for (var i = 2; i < arguments.length; i++) { add(node, arguments[i]); }
+    return node;
+  }
+
+  /* ---------- dates ---------- */
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function iso(y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); }
+  function isoOf(dt) { return iso(dt.getFullYear(), dt.getMonth(), dt.getDate()); }
+  function todayIso() { return isoOf(new Date()); }
+  function maxIso() { return isoOf(new Date(Date.now() + state.maxDaysAhead * 86400000)); }
+  function longDate(s) {
+    var p = s.split('-').map(Number);
+    return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function dayStatus(s) {
+    if (s < todayIso() || s > maxIso()) { return 'closed'; }
+    return (state.dates[s] || 0) >= state.busyThreshold ? 'busy' : 'open';
+  }
+  function pkg() {
+    for (var i = 0; i < state.packages.length; i++) { if (state.packages[i].id === state.pkgId) { return state.packages[i]; } }
+    return null;
+  }
+
+  /* ---------- loading data ---------- */
+  function demoDates() {
+    var out = {};
+    [3, 4, 9, 10, 17].forEach(function (offset) {
+      out[isoOf(new Date(Date.now() + offset * 86400000))] = state.busyThreshold;
+    });
+    [6, 13].forEach(function (offset) {
+      out[isoOf(new Date(Date.now() + offset * 86400000))] = 2;
+    });
+    return out;
+  }
+
+  function load() {
+    if (DEMO) {
+      state.packages = DEMO_PACKAGES;
+      state.dates = demoDates();
+      return Promise.resolve();
+    }
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 20000);
+    return fetch(CONFIG.SCRIPT_URL, { signal: ctrl.signal })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data || !data.ok || !Array.isArray(data.packages)) { throw new Error('bad data'); }
+        state.packages = data.packages;
+        state.dates = data.dates || {};
+        state.busyThreshold = data.busyThreshold || 4;
+        state.maxDaysAhead = data.maxDaysAhead || 540;
+      })
+      .finally(function () { clearTimeout(timer); });
+  }
+
+  /* ---------- sending ---------- */
+  function send() {
+    var payload = {
+      date: state.date,
+      packageId: state.pkgId,
+      name: state.form.name,
+      email: state.form.email,
+      phone: state.form.phone,
+      venue: state.form.venue,
+      arrival: state.form.arrival,
+      games: state.form.games,
+      access: state.form.access,
+      invoice: state.form.invoice,
+      terms: state.form.terms,
+      website: state.form.website
+    };
+    if (DEMO) {
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          resolve({ ok: true, status: dayStatus(state.date) === 'busy' ? 'enquiry' : 'provisional' });
+        }, 700);
+      });
+    }
+    // text/plain keeps this a "simple" request, which Apps Script accepts from any site.
+    return fetch(CONFIG.SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function (res) { return res.json(); });
+  }
+
+  /* ---------- shell ---------- */
+  function renderSteps() {
+    stepsEl.textContent = '';
+    STEP_LABELS.forEach(function (label, i) {
+      var n = i + 1;
+      var done = state.step > n;
+      stepsEl.appendChild(el('li', {
+        class: done ? 'done' : '',
+        'aria-current': state.step === n ? 'step' : false
+      }, n + '. ' + label));
+    });
+    stepsEl.hidden = state.step === 5;
+  }
+
+  function go(step, keepFocus) {
+    state.step = step;
+    render(keepFocus);
+  }
+
+  function render(skipFocus) {
+    renderSteps();
+    appEl.textContent = '';
+    var views = { 1: viewPackages, 2: viewDate, 3: viewDetails, 4: viewReview, 5: viewDone };
+    appEl.appendChild(views[state.step]());
+    if (!skipFocus) {
+      var h = appEl.querySelector('h1');
+      if (h) { h.focus(); window.scrollTo(0, 0); }
+    }
+  }
+
+  function heading(text) { return el('h1', { tabindex: '-1' }, text); }
+
+  /* ---------- step 1: package ---------- */
+  function viewPackages() {
+    return el('div', { class: 'stack' },
+      el('div', null,
+        heading('Choose a package'),
+        el('p', { class: 'lede' }, 'Prices are for one day’s hire. Delivery is not included and is confirmed separately.')
+      ),
+      el('div', { class: 'pkgs' }, state.packages.map(function (p) {
+        return el('button', {
+          type: 'button',
+          class: 'pkg',
+          'aria-pressed': state.pkgId === p.id ? 'true' : 'false',
+          onclick: function () { state.pkgId = p.id; go(2); }
+        },
+          el('span', { class: 'pkg-name' }, p.name),
+          el('span', { class: 'pkg-desc' }, p.description),
+          el('span', { class: 'pkg-price' }, p.price)
+        );
+      }))
+    );
+  }
+
+  /* ---------- step 2: date ---------- */
+  function ensureView() {
+    if (state.viewYear) { return; }
+    var base = state.date ? state.date.split('-').map(Number) : null;
+    var t = new Date();
+    state.viewYear = base ? base[0] : t.getFullYear();
+    state.viewMonth = base ? base[1] - 1 : t.getMonth();
+  }
+
+  function shiftMonth(delta) {
+    var m = state.viewMonth + delta;
+    state.viewYear += Math.floor(m / 12);
+    state.viewMonth = ((m % 12) + 12) % 12;
+    render(true);
+  }
+
+  function viewDate() {
+    ensureView();
+    var y = state.viewYear, m = state.viewMonth;
+    var now = new Date();
+    var atStart = y === now.getFullYear() && m === now.getMonth();
+    var firstOfNext = iso(m === 11 ? y + 1 : y, (m + 1) % 12, 1);
+    var atEnd = firstOfNext > maxIso();
+
+    var offset = (new Date(y, m, 1).getDay() + 6) % 7;
+    var total = new Date(y, m + 1, 0).getDate();
+
+    var cells = DOW.map(function (d) { return el('div', { class: 'dow', 'aria-hidden': 'true' }, d); });
+    for (var b = 0; b < offset; b++) { cells.push(el('div', { 'aria-hidden': 'true' })); }
+    for (var d = 1; d <= total; d++) {
+      (function (day) {
+        var s = iso(y, m, day);
+        var status = dayStatus(s);
+        var label = longDate(s) + (status === 'busy' ? ', busy, you can send an enquiry' : status === 'open' ? ', available' : ', not available');
+        cells.push(el('button', {
+          type: 'button',
+          class: 'day day--' + status,
+          disabled: status === 'closed',
+          'aria-label': label,
+          'aria-pressed': state.date === s ? 'true' : 'false',
+          onclick: function () { state.date = s; render(true); }
+        }, String(day)));
+      })(d);
+    }
+
+    var chosenStatus = state.date ? dayStatus(state.date) : '';
+    var p = pkg();
+
+    return el('div', { class: 'stack' },
+      el('div', null,
+        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(1); } }, '← Change package'),
+        heading('Pick a date'),
+        el('p', { class: 'lede' }, p ? p.name + ' (' + p.price + ')' : '')
+      ),
+      el('div', { class: 'cal' },
+        el('div', { class: 'cal-head' },
+          el('button', { type: 'button', class: 'cal-nav', 'aria-label': 'Previous month', disabled: atStart, onclick: function () { shiftMonth(-1); } }, '‹'),
+          el('div', { class: 'cal-title', 'aria-live': 'polite' }, MONTHS[m] + ' ' + y),
+          el('button', { type: 'button', class: 'cal-nav', 'aria-label': 'Next month', disabled: atEnd, onclick: function () { shiftMonth(1); } }, '›')
+        ),
+        el('div', { class: 'cal-grid' }, cells)
+      ),
+      el('div', { class: 'legend' },
+        el('span', null, el('span', { class: 'swatch swatch--open' }), 'Available'),
+        el('span', null, el('span', { class: 'swatch swatch--busy' }), 'Busy: send an enquiry and we will see if we can fit you in')
+      ),
+      chosenStatus === 'open' && el('div', { class: 'note note--open' }, longDate(state.date) + ' looks free.'),
+      chosenStatus === 'busy' && el('div', { class: 'note note--busy' },
+        longDate(state.date) + ' is a busy day. You can still send a request and we will let you know if we can fit you in.'),
+      el('div', { class: 'actions' },
+        el('button', { type: 'button', class: 'btn btn-primary', disabled: !state.date, onclick: function () { go(3); } }, 'Continue')
+      )
+    );
+  }
+
+  /* ---------- step 3: details ---------- */
+  function validateForm() {
+    var errs = {};
+    var f = state.form;
+    FIELDS.forEach(function (def) {
+      if (def.required && !String(f[def.key]).trim()) { errs[def.key] = 'Please fill this in.'; }
+    });
+    if (!errs.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) { errs.email = 'Please enter a valid email address.'; }
+    if (!f.terms) { errs.terms = 'Please confirm you accept the terms and conditions.'; }
+    return errs;
+  }
+
+  function fieldView(def) {
+    var id = 'f-' + def.key;
+    var errId = id + '-err';
+    var hintId = id + '-hint';
+    var err = state.errors[def.key];
+    var describedBy = [def.hint ? hintId : '', err ? errId : ''].filter(Boolean).join(' ');
+    var common = {
+      id: id,
+      name: def.key,
+      maxlength: String(def.max),
+      required: def.required,
+      autocomplete: def.autocomplete || 'off',
+      'aria-invalid': err ? 'true' : false,
+      'aria-describedby': describedBy || false,
+      oninput: function (e) { state.form[def.key] = e.target.value; }
+    };
+    var control;
+    if (def.type === 'textarea') {
+      control = el('textarea', Object.assign({ rows: String(def.rows || 3) }, common), state.form[def.key]);
+    } else {
+      control = el('input', Object.assign({ type: def.type, value: state.form[def.key] }, common));
+    }
+    return el('div', { class: 'field' },
+      el('label', { for: id }, def.label + (def.required ? '' : ' (optional)')),
+      def.hint && el('span', { class: 'hint', id: hintId }, def.hint),
+      control,
+      err && el('span', { class: 'err', id: errId }, err)
+    );
+  }
+
+  function viewDetails() {
+    var f = state.form;
+    var errCount = Object.keys(state.errors).length;
+    var form = el('form', {
+      class: 'stack',
+      novalidate: true,
+      onsubmit: function (e) {
+        e.preventDefault();
+        state.errors = validateForm();
+        if (Object.keys(state.errors).length) {
+          render(true);
+          var firstBad = appEl.querySelector('[aria-invalid="true"]');
+          if (firstBad) { firstBad.focus(); }
+          return;
+        }
+        go(4);
+      }
+    },
+      errCount > 0 && el('div', { class: 'form-error', role: 'alert' }, 'Please check the highlighted fields.'),
+      FIELDS.map(fieldView),
+      el('label', { class: 'check' },
+        el('input', { type: 'checkbox', name: 'invoice', checked: f.invoice, onchange: function (e) { state.form.invoice = e.target.checked; } }),
+        el('span', null, 'I will need an invoice')
+      ),
+      el('div', { class: 'field' },
+        el('label', { class: 'check' },
+          el('input', {
+            type: 'checkbox', name: 'terms', checked: f.terms,
+            'aria-invalid': state.errors.terms ? 'true' : false,
+            onchange: function (e) { state.form.terms = e.target.checked; }
+          }),
+          el('span', null, 'I have read and accept the ',
+            el('a', { href: CONFIG.TERMS_URL, target: '_blank', rel: 'noopener' }, 'terms and conditions'), '.')
+        ),
+        state.errors.terms && el('span', { class: 'err' }, state.errors.terms)
+      ),
+      // Hidden from people. Bots tend to fill it in, and those requests are ignored.
+      el('div', { class: 'trap', 'aria-hidden': 'true' },
+        el('label', { for: 'f-website' }, 'Leave this field empty'),
+        el('input', { type: 'text', id: 'f-website', name: 'website', tabindex: '-1', autocomplete: 'off', oninput: function (e) { state.form.website = e.target.value; } })
+      ),
+      el('div', { class: 'actions' },
+        el('button', { type: 'submit', class: 'btn btn-primary' }, 'Review request'),
+        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(2); } }, 'Back')
+      )
+    );
+
+    return el('div', { class: 'stack' },
+      el('div', null,
+        heading('Your details'),
+        el('p', { class: 'lede' }, (pkg() ? pkg().name : '') + ' on ' + longDate(state.date))
+      ),
+      form
+    );
+  }
+
+  /* ---------- step 4: review ---------- */
+  function row(label, value) {
+    return el('div', null, el('dt', null, label), el('dd', null, value || 'Not given'));
+  }
+
+  function viewReview() {
+    var f = state.form;
+    var p = pkg();
+    var busy = dayStatus(state.date) === 'busy';
+
+    return el('div', { class: 'stack' },
+      el('div', null,
+        heading('Check and send'),
+        el('p', { class: 'lede' }, busy
+          ? 'This is a busy day, so we will check whether we can fit you in before confirming.'
+          : 'We will confirm your booking by email.')
+      ),
+      el('dl', { class: 'summary' },
+        row('Package', p ? p.name + ' (' + p.price + ')' : ''),
+        row('Date', longDate(state.date)),
+        row('Name', f.name),
+        row('Email', f.email),
+        row('Phone', f.phone),
+        row('Venue', f.venue),
+        row('Arrival or set-up', f.arrival),
+        row('Games wanted', f.games),
+        row('Parking and access', f.access),
+        row('Invoice needed', f.invoice ? 'Yes' : 'No')
+      ),
+      el('p', { class: 'hint' }, 'Delivery is not included in the package price. It starts from £80 in the London area and we will confirm the exact cost.'),
+      state.sendError && el('div', { class: 'form-error', role: 'alert' }, state.sendError),
+      el('div', { class: 'actions' },
+        el('button', {
+          type: 'button', class: 'btn btn-primary', disabled: state.sending,
+          onclick: function () {
+            state.sending = true;
+            state.sendError = '';
+            render(true);
+            send().then(function (res) {
+              state.sending = false;
+              if (res && res.ok) {
+                state.result = res.status === 'enquiry' ? 'enquiry' : 'provisional';
+                go(5);
+              } else {
+                state.sendError = (res && res.error) || 'Something went wrong. Please call or email us instead.';
+                render(true);
+              }
+            }).catch(function () {
+              state.sending = false;
+              state.sendError = 'We could not send your request. Please check your connection, or call or email us instead.';
+              render(true);
+            });
+          }
+        }, state.sending ? 'Sending...' : 'Send request'),
+        el('button', { type: 'button', class: 'btn-quiet', disabled: state.sending, onclick: function () { go(3); } }, 'Back')
+      )
+    );
+  }
+
+  /* ---------- step 5: done ---------- */
+  function viewDone() {
+    var busy = state.result === 'enquiry';
+    return el('div', { class: 'stack' },
+      heading(busy ? 'Thanks, we will check that date' : 'Request received'),
+      el('p', { class: 'lede' }, busy
+        ? 'That day is busy, so we will see whether we can fit you in and come back to you by email.'
+        : 'We have noted ' + longDate(state.date) + ' and will confirm by email shortly.'),
+      el('p', null, 'Nothing is final until we have confirmed with you. If anything changes, call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.'),
+      DEMO && el('p', { class: 'hint' }, 'Demo mode: nothing was saved.'),
+      el('div', { class: 'actions' },
+        el('button', {
+          type: 'button', class: 'btn btn-primary',
+          onclick: function () {
+            state.pkgId = ''; state.date = ''; state.errors = {}; state.sendError = '';
+            state.form = { name: '', email: '', phone: '', venue: '', arrival: '', games: '', access: '', invoice: false, terms: false, website: '' };
+            go(1);
+          }
+        }, 'Make another request')
+      )
+    );
+  }
+
+  /* ---------- start up ---------- */
+  document.getElementById('contact').textContent =
+    'Prefer to talk? Call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.';
+
+  if (DEMO) {
+    var banner = document.getElementById('banner');
+    banner.textContent = 'Demo mode: this page is showing sample dates and nothing you send is saved. Add the Apps Script address in index.html to connect it to the Google Sheet.';
+    banner.hidden = false;
+  }
+
+  appEl.appendChild(el('p', { class: 'lede' }, 'Loading packages...'));
+  renderSteps();
+
+  load().then(function () { render(true); }).catch(function () {
+    appEl.textContent = '';
+    appEl.appendChild(el('div', { class: 'stack' },
+      el('div', { class: 'form-error', role: 'alert' }, 'We could not load the booking page. Please try again, or call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.'),
+      el('div', { class: 'actions' },
+        el('button', { type: 'button', class: 'btn btn-primary', onclick: function () { window.location.reload(); } }, 'Try again')
+      )
+    ));
+  });
+})();
+</script>
+</body>
+</html>
