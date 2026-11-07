@@ -179,14 +179,16 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyjvov1xVtZ5XJBx1pCV1MPziq5gcJEDHCkeFYR_5jWyvJSfVxN0l7H1SyRJoHODqWU/exec',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
     CONTACT_PHONE: '07824 388 688'
   };
 
-  var DEMO = !CONFIG.SCRIPT_URL;
+  // An address starting script.googleusercontent.com is a saved copy of one reply, not the web app. Bookings sent to it are never saved, so treat it as not connected.
+  var BAD_URL = /googleusercontent\.com/.test(CONFIG.SCRIPT_URL);
+  var DEMO = !CONFIG.SCRIPT_URL || BAD_URL;
 
   /* Sample data used only in demo mode. The live page reads the Sheet instead. */
   var DEMO_PACKAGES = [
@@ -965,7 +967,9 @@
 
   if (DEMO) {
     var banner = document.getElementById('banner');
-    banner.textContent = 'Demo mode: this page is showing sample dates and nothing you send is saved. Add the Apps Script address in index.html to connect it to the Google Sheet.';
+    banner.textContent = BAD_URL
+      ? 'Not connected: the SCRIPT_URL in index.html is a temporary copy (it starts script.googleusercontent.com), so nothing you send is saved. Replace it with the Web app URL from Deploy > Manage deployments in Apps Script. It starts https://script.google.com/macros/s/ and ends /exec.'
+      : 'Demo mode: this page is showing sample dates and nothing you send is saved. Add the Apps Script address in index.html to connect it to the Google Sheet.';
     banner.hidden = false;
   }
 
