@@ -106,9 +106,6 @@
   .swatch--open { background: var(--panel); border-color: var(--open-edge); }
   .swatch--busy { background: var(--busy); border-color: var(--busy-edge); }
 
-  .basket h2 { margin-bottom: 8px; }
-  .basket-total dt, .basket-total dd { font-weight: 700; font-size: 22px; }
-  .pay-note h2 { margin-top: 0; }
   .note { padding: 14px 16px; font-size: 18px; border: 1px solid var(--line); background: var(--paper); }
   .note--busy { background: var(--busy); border-color: var(--busy-edge); color: var(--busy-ink); }
 
@@ -181,7 +178,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyjvov1xVtZ5XJBx1pCV1MPziq5gcJEDHCkeFYR_5jWyvJSfVxN0l7H1SyRJoHODqWU/exec',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -233,6 +230,19 @@
     return out;
   })();
 
+  // Pick-up times, every half hour from 8am to 9pm.
+  var PICKUP_OPTIONS = (function () {
+    var out = [];
+    for (var h = 8; h <= 21; h++) {
+      [0, 30].forEach(function (m) {
+        if (h === 21 && m === 30) { return; }
+        var hh = h > 12 ? h - 12 : h;
+        out.push({ value: (h < 10 ? '0' : '') + h + ':' + (m ? '30' : '00'), label: hh + ':' + (m ? '30' : '00') + (h >= 12 ? ' pm' : ' am') });
+      });
+    }
+    return out;
+  })();
+
   var FIELDS = [
     { key: 'name', label: 'Your name', type: 'text', required: true, max: 100, autocomplete: 'name' },
     { key: 'email', label: 'Email', type: 'email', required: true, max: 120, autocomplete: 'email' },
@@ -256,8 +266,11 @@
     ext: [],
     date: '',
     time: '',
+    pickup: '',
     slots: [],
-    reviewTimes: {},
+    pickupSlots: [],
+    minHire: 60,
+    bookedWindows: {},
     bufferMinutes: 60,
     viewYear: 0,
     viewMonth: 0,
@@ -267,13 +280,8 @@
     sendError: '',
     result: '',
     deliveryCfg: { base: 80, stepMiles: 5, stepPrice: 10 },
-    refundPct: 50,
     delivery: { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 },
-    resultReason: '',
-    payments: { enabled: false, depositPercent: 100 },
-    payUrl: '',
-    payAmount: '',
-    returnState: { status: 'checking', amount: '' }
+    resultReason: ''
   };
 
   var appEl = document.getElementById('app');
@@ -316,11 +324,26 @@
   function slotValues() {
     return state.slots.length ? state.slots : TIME_OPTIONS.map(function (t) { return t.value; });
   }
-  function isReviewTime(date, time) {
-    var list = state.reviewTimes[date];
-    return !!(list && list.indexOf(time) !== -1);
+  function toMins(t) { var m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : null; }
+  function pickupValues() {
+    return state.pickupSlots.length ? state.pickupSlots : PICKUP_OPTIONS.map(function (t) { return t.value; });
   }
-  function timeReview() { return !!(state.date && state.time && isReviewTime(state.date, state.time)); }
+  // Pick-up times that are far enough after the chosen set-up time.
+  function pickupChoices() {
+    var a = toMins(state.time);
+    return pickupValues().filter(function (v) { return a === null || toMins(v) - a >= state.minHire; });
+  }
+  // The stretch we hold is the buffer before set-up until pick-up. True when it overlaps another booking that day.
+  // With no pick-up chosen yet, only the hour before set-up is tested.
+  function windowClash(date, arrival, pickup) {
+    var list = state.bookedWindows[date];
+    var a = toMins(arrival);
+    if (!list || a === null) { return false; }
+    var p = pickup ? toMins(pickup) : a;
+    var from = a - state.bufferMinutes;
+    return list.some(function (w) { return from < w[1] && w[0] < p; });
+  }
+  function timeReview() { return !!(state.date && state.time && state.pickup && windowClash(state.date, state.time, state.pickup)); }
   // true when the request will be checked by us rather than booked straight away
   function needsReview() { return dayStatus(state.date) === 'busy' || timeReview(); }
   function reviewReason() { return dayStatus(state.date) === 'busy' ? 'busy' : (timeReview() ? 'time' : ''); }
@@ -351,38 +374,11 @@
     return name + (found && found.price ? ' (' + found.price + ')' : '');
   }
   function timeLabel(v) {
-    var found = TIME_OPTIONS.filter(function (t) { return t.value === v; })[0];
+    var found = TIME_OPTIONS.concat(PICKUP_OPTIONS).filter(function (t) { return t.value === v; })[0];
     return found ? found.label : v;
   }
 
-  /* ---------- basket ---------- */
-  // "£180" -> 18000 pence. Text such as "from £140" returns null and is not charged online.
-  function pence(text) {
-    var m = /^\s*£\s*([0-9][0-9,]*)(?:\.([0-9]{1,2}))?\s*$/.exec(String(text || ''));
-    if (!m) { return null; }
-    return parseInt(m[1].replace(/,/g, ''), 10) * 100 + (m[2] ? parseInt((m[2] + '0').substring(0, 2), 10) : 0);
-  }
   function money(p) { return '£' + Math.floor(p / 100) + (p % 100 ? '.' + ('0' + (p % 100)).slice(-2) : ''); }
-  function basket() {
-    var p = pkg();
-    var lines = [], unpriced = [];
-    if (p) { var pp = pence(p.price); if (pp) { lines.push({ name: p.name, pence: pp }); } else { unpriced.push(p.name); } }
-    if (p && p.extras) {
-      state.ext.forEach(function (name) {
-        var item = state.games.filter(function (x) { return x.category.toLowerCase() === 'extra' && x.name === name; })[0];
-        var ep = item ? pence(item.price) : null;
-        if (ep) { lines.push({ name: name, pence: ep }); } else { unpriced.push(name + (item && item.price ? ' (' + item.price + ')' : '')); }
-      });
-    }
-    lines.push({ name: 'Delivery', pence: state.deliveryCfg.base * 100 });
-    var pkgP = p ? pence(p.price) : null;
-    if (pkgP && state.refundPct > 0) {
-      lines.push({ name: 'Refundable deposit (' + state.refundPct + '% of package)', pence: Math.round(pkgP * state.refundPct / 100), refundable: true });
-    }
-    var subtotal = lines.reduce(function (t, l) { return t + l.pence; }, 0);
-    var pct = state.payments.depositPercent;
-    return { lines: lines, unpriced: unpriced, subtotal: subtotal, due: pct >= 100 ? subtotal : Math.round(subtotal * pct / 100), pct: pct };
-  }
 
   /* ---------- loading data ---------- */
   function demoDates() {
@@ -395,10 +391,11 @@
     });
     return out;
   }
-  function demoReviewTimes() {
+  function demoWindows() {
     var out = {};
-    out[isoOf(new Date(Date.now() + 6 * 86400000))] = ['09:30', '10:00', '10:30'];
-    out[isoOf(new Date(Date.now() + 13 * 86400000))] = ['13:00', '13:30', '14:00'];
+    // 9:30 set-up to 4pm pick-up already booked one day, so from 8:30 to 4pm is held.
+    out[isoOf(new Date(Date.now() + 6 * 86400000))] = [[510, 960]];
+    out[isoOf(new Date(Date.now() + 13 * 86400000))] = [[720, 1080]];
     return out;
   }
 
@@ -407,8 +404,7 @@
       state.packages = DEMO_PACKAGES;
       state.games = DEMO_GAMES;
       state.dates = demoDates();
-      state.reviewTimes = demoReviewTimes();
-      state.payments = { enabled: true, depositPercent: 100 };
+      state.bookedWindows = demoWindows();
       return Promise.resolve();
     }
     var ctrl = new AbortController();
@@ -422,14 +418,12 @@
         state.dates = data.dates || {};
         state.busyThreshold = data.busyThreshold || 4;
         state.slots = Array.isArray(data.slots) ? data.slots : [];
-        state.reviewTimes = data.reviewTimes || {};
+        state.pickupSlots = Array.isArray(data.pickupSlots) ? data.pickupSlots : [];
+        state.minHire = data.minHireMinutes || 60;
+        state.bookedWindows = data.bookedWindows || {};
         state.bufferMinutes = data.bufferMinutes || 60;
-        if (typeof data.refundableDepositPercent === 'number') { state.refundPct = Math.min(Math.max(data.refundableDepositPercent, 0), 100); }
         if (data.delivery && data.delivery.base > 0) { state.deliveryCfg = { base: data.delivery.base, stepMiles: data.delivery.stepMiles || 5, stepPrice: data.delivery.stepPrice || 10 }; }
         state.maxDaysAhead = data.maxDaysAhead || 540;
-        if (data.payments && data.payments.enabled) {
-          state.payments = { enabled: true, depositPercent: Math.min(Math.max(parseInt(data.payments.depositPercent, 10) || 100, 1), 100) };
-        }
       })
       .finally(function () { clearTimeout(timer); });
   }
@@ -467,7 +461,7 @@
     if (d.status === 'loading') { text = 'Working out your delivery cost...'; }
     else if (d.status === 'inside') { text = 'Delivery within the M25 is ' + base + '.'; }
     else if (d.status === 'outside') {
-      text = 'Delivery is ' + base + ', plus an estimated ' + money(d.extra * 100) + ' for the roughly ' + Math.round(d.miles) + ' miles your venue is beyond the M25. We will confirm the exact cost with you, and the extra distance is not charged online.';
+      text = 'Delivery is ' + base + ', plus an estimated ' + money(d.extra * 100) + ' for the roughly ' + Math.round(d.miles) + ' miles your venue is beyond the M25. We will confirm the exact cost with you.';
     } else { text = 'Delivery is ' + base + '. We could not place that postcode automatically, so we will confirm any extra distance charge with you.'; }
     return el('p', { class: 'hint', 'aria-live': 'polite' }, text);
   }
@@ -479,6 +473,7 @@
     var payload = {
       date: state.date,
       arrival: state.time,
+      pickup: state.pickup,
       packageId: state.pkgId,
       name: f.name,
       email: f.email,
@@ -498,8 +493,7 @@
       return new Promise(function (resolve) {
         setTimeout(function () {
           if (needsReview()) { resolve({ ok: true, status: 'enquiry', reason: reviewReason() }); return; }
-          var b = basket();
-          resolve(b.due ? { ok: true, status: 'provisional', payUrl: 'demo', payAmount: money(b.due) } : { ok: true, status: 'provisional' });
+          resolve({ ok: true, status: 'provisional' });
         }, 700);
       });
     }
@@ -524,7 +518,7 @@
         'aria-current': state.step === id ? 'step' : false
       }, (i + 1) + '. ' + STEP_LABELS[id]));
     });
-    stepsEl.hidden = ['done', 'paid', 'cancelled'].indexOf(state.step) !== -1;
+    stepsEl.hidden = state.step === 'done';
   }
 
   function go(step, keepFocus) {
@@ -535,7 +529,7 @@
   function render(skipFocus) {
     renderSteps();
     appEl.textContent = '';
-    var views = { package: viewPackages, games: viewGames, date: viewDate, details: viewDetails, review: viewReview, done: viewDone, paid: viewPaid, cancelled: viewCancelled };
+    var views = { package: viewPackages, games: viewGames, date: viewDate, details: viewDetails, review: viewReview, done: viewDone };
     appEl.appendChild(views[state.step]());
     if (!skipFocus) {
       var h = appEl.querySelector('h1');
@@ -550,7 +544,7 @@
     return el('div', { class: 'stack' },
       el('div', null,
         heading('Choose a package'),
-        el('p', { class: 'lede' }, 'Prices are for one day’s hire. Delivery is added at the end: £' + state.deliveryCfg.base + ' within the M25, a little more beyond it.')
+        el('p', { class: 'lede' }, 'Prices are for one day’s hire. Delivery is £' + state.deliveryCfg.base + ' within the M25, a little more beyond it. We will confirm the full total with you.')
       ),
       el('div', { class: 'pkgs' }, state.packages.map(function (p) {
         return el('button', {
@@ -717,18 +711,32 @@
         longDate(state.date) + ' is a busy day. You can still send a request and we will let you know if we can fit you in.'),
       state.date && chosenStatus !== 'closed' && el('div', { class: 'field' },
         el('label', { for: 'f-time' }, 'Arrival or set-up time'),
-        el('span', { class: 'hint', id: 'f-time-hint' }, 'The time you would like us to be set up by.'),
-        el('select', { id: 'f-time', name: 'time', 'aria-describedby': 'f-time-hint', onchange: function (e) { state.time = e.target.value; render(true); } },
+        el('span', { class: 'hint', id: 'f-time-hint' }, 'The time you would like us to be set up by. We allow ' + state.bufferMinutes + ' minutes before this to get ready.'),
+        el('select', { id: 'f-time', name: 'time', 'aria-describedby': 'f-time-hint', onchange: function (e) {
+          state.time = e.target.value;
+          if (state.pickup && pickupChoices().indexOf(state.pickup) === -1) { state.pickup = ''; }
+          render(true);
+        } },
           el('option', { value: '', selected: !state.time }, 'Choose a time'),
           slotValues().map(function (v) {
-            return el('option', { value: v, selected: state.time === v }, timeLabel(v) + (isReviewTime(state.date, v) ? ' (we will need to check)' : ''));
+            return el('option', { value: v, selected: state.time === v }, timeLabel(v) + (windowClash(state.date, v, '') ? ' (we will need to check)' : ''));
+          })
+        )
+      ),
+      state.date && state.time && chosenStatus !== 'closed' && el('div', { class: 'field' },
+        el('label', { for: 'f-pickup' }, 'Pick-up time'),
+        el('span', { class: 'hint', id: 'f-pickup-hint' }, 'The time you would like us to collect the games. It needs to be at least an hour after set-up.'),
+        el('select', { id: 'f-pickup', name: 'pickup', 'aria-describedby': 'f-pickup-hint', onchange: function (e) { state.pickup = e.target.value; render(true); } },
+          el('option', { value: '', selected: !state.pickup }, 'Choose a time'),
+          pickupChoices().map(function (v) {
+            return el('option', { value: v, selected: state.pickup === v }, timeLabel(v) + (windowClash(state.date, state.time, v) ? ' (we will need to check)' : ''));
           })
         )
       ),
       chosenStatus !== 'busy' && timeReview() && el('div', { class: 'note note--busy' },
-        timeLabel(state.time) + ' is close to another booking that day. You can still send a request and we will check whether it works and come back to you.'),
+        'Those times overlap another booking that day. You can still send a request and we will check whether it works and come back to you.'),
       el('div', { class: 'actions' },
-        el('button', { type: 'button', class: 'btn btn-primary', disabled: !state.date || !state.time, onclick: function () { go(nextStep('date')); } }, 'Continue')
+        el('button', { type: 'button', class: 'btn btn-primary', disabled: !state.date || !state.time || !state.pickup, onclick: function () { go(nextStep('date')); } }, 'Continue')
       )
     );
   }
@@ -837,93 +845,6 @@
   }
 
   /* ---------- step: review ---------- */
-  // The basket: what would be charged online, worked out the same way the server does it.
-  function basketView(review) {
-    if (!state.payments.enabled) { return null; }
-    if (review) {
-      return el('div', { class: 'note' }, 'Nothing to pay yet. Because we need to check ' + (reviewReason() === 'busy' ? 'this busy day' : 'this time') + ', we will confirm first and then arrange payment.');
-    }
-    var b = basket();
-    if (!b.subtotal) { return null; }
-    return el('div', { class: 'basket' },
-      el('h2', null, 'Your basket'),
-      el('dl', { class: 'summary' },
-        b.lines.map(function (l) { return el('div', null, el('dt', null, l.name), el('dd', null, money(l.pence))); }),
-        b.pct < 100 && el('div', null, el('dt', null, 'Deposit (' + b.pct + '%)'), el('dd', null, money(b.due))),
-        el('div', { class: 'basket-total' }, el('dt', null, 'To pay online'), el('dd', null, money(b.due)))
-      ),
-      b.unpriced.length > 0 && el('p', { class: 'hint' }, 'Not included in this total, price confirmed separately: ' + b.unpriced.join(', ') + '.'),
-      state.delivery.status === 'outside' && el('p', { class: 'hint' }, 'Extra distance beyond the M25 (about ' + money(state.delivery.extra * 100) + ') is not in this total. We will confirm it with you.'),
-      b.lines.some(function (l) { return l.refundable; }) && el('p', { class: 'hint' }, 'The refundable deposit is returned to you after we have collected the games.'),
-      el('p', { class: 'hint' }, 'After you send your request you will be taken to a secure card payment page.')
-    );
-  }
-
-  /* ---------- coming back from the payment page ---------- */
-  function viewPaid() {
-    var r = state.returnState;
-    var content;
-    if (r.status === 'paid') {
-      content = [heading('Payment received'),
-        el('p', { class: 'lede' }, 'Thank you. We have received ' + r.amount + '.'),
-        el('p', null, 'We will confirm your booking by email. If anything changes, call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.')];
-    } else if (r.status === 'unpaid') {
-      content = [heading('Payment not completed'),
-        el('p', { class: 'lede' }, 'We have not received your payment yet.'),
-        el('p', null, 'Your booking request is saved and we will be in touch. If you were charged, please call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.')];
-    } else if (r.status === 'error') {
-      content = [heading('We could not check your payment'),
-        el('p', { class: 'lede' }, 'Your booking request is saved. If you paid, we will see it on our side.'),
-        el('p', null, 'Please call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + ' if you are unsure.')];
-    } else {
-      content = [heading('Checking your payment'), el('p', { class: 'lede' }, 'One moment...')];
-    }
-    if (DEMO) {
-      content.push(el('p', { class: 'hint' }, 'Demo mode: this was a practice payment. No card was used and nothing was saved.'));
-      content.push(el('div', { class: 'actions' }, el('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
-        state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.errors = {}; state.sendError = '';
-        state.payUrl = ''; state.payAmount = ''; state.form = blankForm();
-        state.delivery = { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 }; go('package');
-      } }, 'Start again')));
-    }
-    return el('div', { class: 'stack' }, content);
-  }
-
-  function viewCancelled() {
-    return el('div', { class: 'stack' },
-      heading('Payment not completed'),
-      el('p', { class: 'lede' }, 'You left the payment page, so nothing was charged.'),
-      el('p', null, 'Your booking request is saved and we will be in touch to confirm. You can also pay when we confirm. Call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + ' with any questions.'),
-      el('div', { class: 'actions' },
-        el('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
-          try { history.replaceState(null, '', location.pathname); } catch (e) { /* not important */ }
-          go('package');
-        } }, 'Make another request')
-      )
-    );
-  }
-
-  function checkReturn() {
-    var params = new URLSearchParams(window.location.search);
-    var sessionId = params.get('paid');
-    if (sessionId && !DEMO) {
-      state.step = 'paid';
-      state.returnState = { status: 'checking', amount: '' };
-      render(true);
-      fetch(CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + 'action=confirmpay&session=' + encodeURIComponent(sessionId))
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          state.returnState = data && data.ok
-            ? (data.paid ? { status: 'paid', amount: String(data.amount || '') } : { status: 'unpaid', amount: '' })
-            : { status: 'error', amount: '' };
-          render(true);
-        })
-        .catch(function () { state.returnState = { status: 'error', amount: '' }; render(true); });
-      return true;
-    }
-    if (params.get('cancelled') && !DEMO) { state.step = 'cancelled'; render(true); return true; }
-    return false;
-  }
   function row(label, value) {
     return el('div', null, el('dt', null, label), el('dd', null, value || 'Not given'));
   }
@@ -946,6 +867,7 @@
         p && p.extras && state.ext.length > 0 && row('Extras', state.ext.map(extraLabel).join('\n')),
         row('Date', longDate(state.date)),
         row('Arrival or set-up', state.time ? timeLabel(state.time) : ''),
+        row('Pick-up', state.pickup ? timeLabel(state.pickup) : ''),
         row('Name', f.name),
         row('Email', f.email),
         row('Phone', f.phone),
@@ -954,7 +876,6 @@
         row('Parking and access', f.access),
         row('Invoice needed', f.invoice ? 'Yes' : 'No')
       ),
-      basketView(review),
       deliveryNote(),
       state.sendError && el('div', { class: 'form-error', role: 'alert' }, state.sendError),
       el('div', { class: 'actions' },
@@ -969,8 +890,6 @@
               if (res && res.ok) {
                 state.result = res.status === 'enquiry' ? 'enquiry' : 'provisional';
                 state.resultReason = res.reason === 'time' ? 'time' : 'busy';
-                state.payUrl = typeof res.payUrl === 'string' && (/^https:\/\/checkout\.stripe\.com\//.test(res.payUrl) || (DEMO && res.payUrl === 'demo')) ? res.payUrl : '';
-                state.payAmount = state.payUrl ? String(res.payAmount || '') : '';
                 go('done');
               } else {
                 state.sendError = (res && res.error) || 'Something went wrong. Please call or email us instead.';
@@ -998,26 +917,15 @@
         ? 'That time is close to another booking, so we will check it works and come back to you by email.'
         : busy
         ? 'That day is busy, so we will see whether we can fit you in and come back to you by email.'
-        : 'We have noted ' + longDate(state.date) + ' at ' + timeLabel(state.time) + ' and will confirm by email shortly.'),
+        : 'We have noted ' + longDate(state.date) + ', set-up by ' + timeLabel(state.time) + ' and pick-up at ' + timeLabel(state.pickup) + ', and will confirm by email shortly.'),
       el('p', null, 'Nothing is final until we have confirmed with you. If anything changes, call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.'),
-      state.payUrl && el('div', { class: 'note pay-note' },
-        el('h2', null, 'Pay online'),
-        el('p', null, 'Your request is saved. Pay ' + state.payAmount + ' now by card to secure your date. You will be taken to our secure payment page (Stripe) and brought back here afterwards.'),
-        el('div', { class: 'actions' },
-          DEMO
-            ? el('a', { class: 'btn btn-primary pay-link', href: '#', onclick: function (e) { e.preventDefault(); state.returnState = { status: 'paid', amount: state.payAmount }; go('paid'); } }, 'Pay ' + state.payAmount + ' now (demo)')
-            : el('a', { class: 'btn btn-primary pay-link', href: state.payUrl, rel: 'noopener' }, 'Pay ' + state.payAmount + ' now')
-        )
-      ),
       DEMO && el('p', { class: 'hint' }, 'Demo mode: nothing was saved.'),
       el('div', { class: 'actions' },
         el('button', {
           type: 'button', class: 'btn btn-primary',
           onclick: function () {
-            state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.errors = {}; state.sendError = '';
+            state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.pickup = ''; state.errors = {}; state.sendError = '';
             state.delivery = { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 };
-            state.payUrl = ''; state.payAmount = '';
-            try { history.replaceState(null, '', location.pathname); } catch (e) { /* not important */ }
             state.form = blankForm();
             go('package');
           }
@@ -1041,7 +949,7 @@
   appEl.appendChild(el('p', { class: 'lede' }, 'Loading packages...'));
   renderSteps();
 
-  load().then(function () { if (!checkReturn()) { render(true); } }).catch(function () {
+  load().then(function () { render(true); }).catch(function () {
     appEl.textContent = '';
     appEl.appendChild(el('div', { class: 'stack' },
       el('div', { class: 'form-error', role: 'alert' }, 'We could not load the booking page. Please try again, or call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.'),

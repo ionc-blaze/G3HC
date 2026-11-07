@@ -46,12 +46,9 @@ Settings tab, column A is the name, column B the value:
 | `CALENDAR_NAME` | Calendar created/used for events (default "Giant Garden Games Bookings"). |
 | `NOTIFY_EMAIL` | Email address to alert on each new request. Blank = no email. |
 | `MAX_DAYS_AHEAD` | How far ahead people can book (default 540). |
-| `SITE_URL` | Online payment only. The public address of the booking page, where customers return after paying. |
-| `BUFFER_MINUTES` | Gap needed between bookings on the same day (default 60). A request for a time closer than this to an existing booking is not booked straight away: it is saved as a `Time review` for you to check. Exactly this far apart is fine. |
-| `DELIVERY_BASE` | Delivery charge in pounds (default 80), added to every online basket. |
+| `BUFFER_MINUTES` | Time allowed before the set-up time (default 60). Each booking holds the calendar from this long before set-up until pick-up. A request whose own hold overlaps another booking is saved as a `Time review` for you to check. Touching exactly is fine. |
+| `DELIVERY_BASE` | Delivery charge in pounds (default 80). Shown to the customer as information; not charged online. |
 | `DELIVERY_STEP_MILES` / `DELIVERY_STEP_PRICE` | Outside the M25, an estimated extra of this many pounds (default 10) for each started block of this many miles (default 5) beyond the M25. Only an estimate: it is shown to the customer and written in the Bookings sheet, but not charged online. |
-| `REFUNDABLE_DEPOSIT_PERCENT` | A refundable deposit added to the online basket, as a percentage of the package price only (default 50; 0 turns it off). It is paid with the games and delivery and refunded by hand after collection. |
-| `DEPOSIT_PERCENT` | Online payment only. 100 charges the whole basket; 30 charges a 30% deposit. |
 
 Packages tab: edit names, descriptions, prices; changes appear on the page straight away. Keep each Package ID unique.
 
@@ -69,56 +66,41 @@ Packages tab: edit names, descriptions, prices; changes appear on the page strai
 
 **Games** (one row per game): Name, Category (Giant, Kids, Choice or Extra), Price (for extras), Note (size or contents, optional). The same name can appear in more than one category. Add, rename or delete rows and the page updates straight away.
 
-## Online payment (optional, Stripe test mode)
-
-Customers see a basket (package plus priced extras) on the review step. After they send a request for a free date they get a **Pay now** button that opens Stripe Checkout for that total. Busy-day enquiries are not asked to pay. The amount is worked out by the script from the prices in your Sheet, never from the page. Items priced like "from £140" are not charged online.
-
-1. Create a free account at stripe.com and switch on **Test mode**.
-2. In Stripe, open **Developers > API keys** and copy the **Secret key** (starts `sk_test_`). Never paste it into the Sheet or the page.
-3. In Apps Script, click **Project Settings** (cog) > **Script properties** > **Add script property**. Name `STRIPE_SECRET_KEY`, value the key. Save.
-4. In the Settings tab, set `SITE_URL` to your live booking page address (the GitHub Pages link) and, if you want, `DEPOSIT_PERCENT`.
-5. In Apps Script, pick **authorise** and **Run** once more (it now also asks to contact Stripe), then redeploy a New version.
-6. Make a test booking and pay with the test card **4242 4242 4242 4242**, any future expiry, any 3-digit code. You come back to the page with "Payment received", and the Bookings row shows `Paid £... (Stripe)` in the Payment column.
-
-To go live later, Troy creates his own Stripe account and the live secret key (`sk_live_`) replaces the test one. The booking Status is still changed by hand. Payments show in the Stripe dashboard too.
-
 ## Updating after a change to Code.gs
 
 1. Apps Script > replace everything in Code.gs with the new version > Save.
 2. **Deploy > Manage deployments > pencil icon > Version: New version > Deploy.** The web address stays the same.
 3. Upload the new `index.html` to GitHub, with your web address pasted back into `SCRIPT_URL`.
 
-## Refundable deposit
-
-The basket shows the games (package and extras), delivery and a refundable deposit (50% of the package price by default, set with `REFUNDABLE_DEPOSIT_PERCENT`). The customer pays all of it online. After the games are collected, refund the deposit in the Stripe dashboard (Payments > the payment > Refund, for the deposit amount). The script never refunds anything itself. Check the wording matches Troy's terms and conditions. `DEPOSIT_PERCENT` (part-payment of the whole basket) is a different setting; leave it at 100 so people pay in full.
-
 ## Delivery pricing and postcodes
 
 Customers enter the venue postcode. The script looks it up on postcodes.io (free, no account) and works out where it is relative to the M25.
 
-- **Everyone pays the base delivery (default £80)** as a line in the online basket (and a deposit, if you set one, is a percentage of the whole basket including delivery).
-- **Beyond the M25:** the page shows an estimate of £10 for each started 5 miles beyond the M25 (measured in a straight line to the nearest part of the M25). It is not charged online. The Bookings sheet shows it in the "Delivery estimate" column, and the calendar event shows it too, for you to confirm with the customer.
+- **Base delivery (default £80)** is shown to the customer and written in the Bookings sheet. Nothing is charged online; you invoice as before.
+- **Beyond the M25:** the page shows an estimate of £10 for each started 5 miles beyond the M25 (measured in a straight line to the nearest part of the M25). The Bookings sheet shows it in the "Delivery estimate" column, and the calendar event shows it too, for you to confirm with the customer.
 - **If the postcode cannot be placed** (or the lookup service is down) the booking still goes through and the Delivery estimate column says to confirm any extra distance.
 - **Approximate boundary:** the M25 outline in the script is hand-drawn from the junctions and is accurate to about a mile or two. Treat the estimate as a guide near the M25 itself.
 - Bookings now has two extra columns, **Postcode** and **Delivery estimate** (added automatically at the end).
 
-## Choosing a time, and the one-hour buffer
+## Set-up time, pick-up time and the calendar
 
-Customers choose the arrival or set-up time (every half hour, 7:00 am to 6:00 pm) on the same step as the date. The page shows times close to an existing booking as "(we will need to check)".
+On the date step customers choose a **set-up time** (every half hour, 7:00 am to 6:00 pm) and a **pick-up time** (8:00 am to 9:00 pm, at least an hour after set-up). The pick-up time is saved in the Bookings sheet (column O, headed "Pick-up time"; older sheets had "Payment" there and it is renamed automatically).
 
-- Only bookings with Status `Provisional` or `Confirmed` count. Enquiries, `Declined` and `Cancelled` do not block anything, so change an enquiry to `Confirmed` once you accept it and its time is then protected.
-- A request inside the buffer is saved with Status `Time review` and a calendar event titled `ENQUIRY (time clash) ...`. No payment is asked for.
-- The public side only shares which times need review on each date, never who booked them.
-- This is a simple stand-in for real travel time and distance between jobs. If Troy wants that, it can be added later.
+- Each request creates a **timed calendar event** that starts an hour before the set-up time (`BUFFER_MINUTES`) and ends at the pick-up time, so the calendar shows the time to get ready as well as the hire. The event title reads like `PROVISIONAL set-up 11:00, pick-up 17:00: Package Two - Alex Smith`.
+- Only bookings with Status `Provisional` or `Confirmed` hold time. Enquiries, `Declined` and `Cancelled` do not, so change an enquiry to `Confirmed` once you accept it and its time is then protected.
+- A request whose own stretch (an hour before set-up until pick-up) overlaps a held booking is saved with Status `Time review` and an event titled `ENQUIRY (time clash) ...`. The page says it will be checked. One finishing exactly as the next one starts holding time is fine.
+- Older rows with no pick-up time are assumed to last two hours when checking for clashes.
+- The public side only shares which time ranges are held on each date, never who booked them.
+- This is a simple stand-in for real travel time between jobs. If Troy wants that, it can be added later.
 
 ## Day to day
 
-- Each request appears in **Bookings** with Status `Provisional` (or `Busy day enquiry` / `Time review`) and a calendar event titled `PROVISIONAL 11:00: ...` / `ENQUIRY (busy day) 11:00: ...` / `ENQUIRY (time clash) 11:00: ...`.
+- Each request appears in **Bookings** with Status `Provisional` (or `Busy day enquiry` / `Time review`) and a calendar event titled `PROVISIONAL set-up 11:00, pick-up 17:00: ...` / `ENQUIRY (busy day) ...` / `ENQUIRY (time clash) ...`.
 - Change Status to `Confirmed`, `Declined` or `Cancelled`. Declined and Cancelled stop counting towards a busy day. Rename or delete the calendar event by hand to match.
 
 ## Test it
 
-Make a booking on the live page. Check: a new Bookings row, an all-day event on the calendar with the time in its title, and (if set) the email. Delete the test row and event afterwards.
+Make a booking on the live page. Check: a new Bookings row, a timed event on the calendar from an hour before set-up to pick-up, and (if set) the email. Delete the test row and event afterwards.
 
 ## Things to know
 
