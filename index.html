@@ -106,6 +106,8 @@
   .swatch--open { background: var(--panel); border-color: var(--open-edge); }
   .swatch--busy { background: var(--busy); border-color: var(--busy-edge); }
 
+  .opt-out { color: var(--danger); font-weight: 700; }
+  .opt:has(input:disabled) { opacity: 0.6; cursor: not-allowed; background: var(--panel); }
   .note { padding: 14px 16px; font-size: 18px; border: 1px solid var(--line); background: var(--paper); }
   .note--busy { background: var(--busy); border-color: var(--busy-edge); color: var(--busy-ink); }
 
@@ -178,7 +180,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyjvov1xVtZ5XJBx1pCV1MPziq5gcJEDHCkeFYR_5jWyvJSfVxN0l7H1SyRJoHODqWU/exec',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -195,8 +197,8 @@
     { id: 'p2', name: 'Package Two (6 games)', description: 'Any 6 giant games of your choice. One day’s hire.', price: '£240', pick: 6, pickFrom: 'Giant', extras: true },
     { id: 'p3', name: 'Package Three (8 games)', description: 'Any 8 giant games of your choice. One day’s hire.', price: '£310', pick: 8, pickFrom: 'Giant', extras: true },
     { id: 'p4', name: 'Package Four (6 kids games)', description: 'Any 6 kids games of your choice. One day’s hire.', price: '£130', pick: 6, pickFrom: 'Kids', extras: true },
-    { id: 'p5', name: 'Package Five', description: 'Candy Cart plus a Deco Ladder or a Cast Iron Post Box.', price: '£160', pick: 1, pickFrom: 'Choice', extras: false },
-    { id: 'p6', name: 'Package Six', description: 'Candy Cart plus a Deco Ladder and a Cast Iron Post Box.', price: '£210', pick: 0, pickFrom: '', extras: false },
+    { id: 'p5', name: 'Package Five', description: 'Candy Cart plus a Deco Ladder or a Cast Iron Post Box.', price: '£160', pick: 1, pickFrom: 'Choice', extras: false, includes: ['Candy Cart'] },
+    { id: 'p6', name: 'Package Six', description: 'Candy Cart plus a Deco Ladder and a Cast Iron Post Box.', price: '£210', pick: 0, pickFrom: '', extras: false, includes: ['Candy Cart', 'Deco Ladder', 'Cast Iron Post Box'] },
     { id: 'p7', name: 'Christmas Games Package', description: 'Christmas Jenga, Quoits, Cornhole, Limbo and Beat the Buzzer, with a free Connect 4.', price: '£350', pick: 0, pickFrom: '', extras: false }
   ];
   function g(cat, names) { return names.split('|').map(function (n) { return { name: n, category: cat, price: '', note: '' }; }); }
@@ -212,6 +214,9 @@
       { name: 'Bouncy Castle', category: 'Extra', price: '£50', note: '' }
     ]
   );
+
+  // In demo mode a couple of games have one copy, and are already out on the demo date six days ahead.
+  DEMO_GAMES.forEach(function (x) { if (x.name === 'Giant Jenga' || x.name === 'Cornhole') { x.stock = 1; } });
 
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -230,12 +235,12 @@
     return out;
   })();
 
-  // Pick-up times, every half hour from 8am to 9pm.
+  // Pick-up times, every half hour from 8am to 8pm.
   var PICKUP_OPTIONS = (function () {
     var out = [];
-    for (var h = 8; h <= 21; h++) {
+    for (var h = 8; h <= 20; h++) {
       [0, 30].forEach(function (m) {
-        if (h === 21 && m === 30) { return; }
+        if (h === 20 && m === 30) { return; }
         var hh = h > 12 ? h - 12 : h;
         out.push({ value: (h < 10 ? '0' : '') + h + ':' + (m ? '30' : '00'), label: hh + ':' + (m ? '30' : '00') + (h >= 12 ? ' pm' : ' am') });
       });
@@ -271,7 +276,10 @@
     pickupSlots: [],
     minHire: 60,
     bookedWindows: {},
+    gameUse: {},
     bufferMinutes: 60,
+    allowanceMinutes: 60,
+    minDays: 1,
     viewYear: 0,
     viewMonth: 0,
     form: blankForm(),
@@ -281,7 +289,8 @@
     result: '',
     deliveryCfg: { base: 80, stepMiles: 5, stepPrice: 10 },
     delivery: { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 },
-    resultReason: ''
+    resultReason: '',
+    emailed: false
   };
 
   var appEl = document.getElementById('app');
@@ -317,8 +326,10 @@
     var p = s.split('-').map(Number);
     return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
+  // The earliest date that can be booked: tomorrow by default, never today.
+  function minIso() { return isoOf(new Date(Date.now() + Math.max(state.minDays, 1) * 86400000)); }
   function dayStatus(s) {
-    if (s < todayIso() || s > maxIso()) { return 'closed'; }
+    if (s < minIso() || s > maxIso()) { return 'closed'; }
     return (state.dates[s] || 0) >= state.busyThreshold ? 'busy' : 'open';
   }
   function slotValues() {
@@ -339,14 +350,42 @@
     var list = state.bookedWindows[date];
     var a = toMins(arrival);
     if (!list || a === null) { return false; }
-    var p = pickup ? toMins(pickup) : a;
+    var p = (pickup ? toMins(pickup) : a) + state.allowanceMinutes;
     var from = a - state.bufferMinutes;
     return list.some(function (w) { return from < w[1] && w[0] < p; });
   }
+
+  /* ---------- stock ---------- */
+  // How many copies of an item there are, or null when it is not counted.
+  function stockOf(name) {
+    var found = state.games.filter(function (x) { return x.name === name && typeof x.stock === 'number'; })[0];
+    return found ? found.stock : null;
+  }
+  // True when one more copy is free for the whole of the chosen date and times.
+  function itemFree(name) {
+    var stock = stockOf(name);
+    if (stock === null) { return true; }
+    var a = toMins(state.time), p = toMins(state.pickup);
+    if (a === null || p === null) { return stock > 0; }
+    var from = a - state.bufferMinutes, to = p + state.allowanceMinutes;
+    var pts = [];
+    (state.gameUse[state.date] || []).forEach(function (u) {
+      if (u[2].indexOf(name) !== -1 && u[0] < to && from < u[1]) { pts.push([Math.max(u[0], from), 1], [Math.min(u[1], to), -1]); }
+    });
+    pts.sort(function (x, y) { return x[0] - y[0] || x[1] - y[1]; });
+    var now = 0, peak = 0;
+    pts.forEach(function (pt) { now += pt[1]; if (now > peak) { peak = now; } });
+    return peak < stock;
+  }
+  // Items that come with the package and are out: the request is checked by us rather than refused.
+  function includedShort() {
+    var p = pkg();
+    return !!p && Array.isArray(p.includes) && p.includes.some(function (n) { return !itemFree(n); });
+  }
   function timeReview() { return !!(state.date && state.time && state.pickup && windowClash(state.date, state.time, state.pickup)); }
   // true when the request will be checked by us rather than booked straight away
-  function needsReview() { return dayStatus(state.date) === 'busy' || timeReview(); }
-  function reviewReason() { return dayStatus(state.date) === 'busy' ? 'busy' : (timeReview() ? 'time' : ''); }
+  function needsReview() { return dayStatus(state.date) === 'busy' || timeReview() || includedShort(); }
+  function reviewReason() { return dayStatus(state.date) === 'busy' ? 'busy' : (timeReview() ? 'time' : (includedShort() ? 'stock' : '')); }
   function pkg() {
     for (var i = 0; i < state.packages.length; i++) { if (state.packages[i].id === state.pkgId) { return state.packages[i]; } }
     return null;
@@ -355,9 +394,9 @@
   /* ---------- steps depend on the package ---------- */
   function needsGames(p) { return !!p && (p.pick > 0 || p.extras); }
   function stepIds() {
-    var ids = ['package'];
+    var ids = ['package', 'date'];
     if (needsGames(pkg())) { ids.push('games'); }
-    return ids.concat(['date', 'details', 'review']);
+    return ids.concat(['details', 'review']);
   }
   function nextStep(id) { var ids = stepIds(); return ids[ids.indexOf(id) + 1]; }
   function prevStep(id) { var ids = stepIds(); return ids[ids.indexOf(id) - 1]; }
@@ -394,8 +433,13 @@
   function demoWindows() {
     var out = {};
     // 9:30 set-up to 4pm pick-up already booked one day, so from 8:30 to 4pm is held.
-    out[isoOf(new Date(Date.now() + 6 * 86400000))] = [[510, 960]];
-    out[isoOf(new Date(Date.now() + 13 * 86400000))] = [[720, 1080]];
+    out[isoOf(new Date(Date.now() + 6 * 86400000))] = [[510, 1020]];
+    out[isoOf(new Date(Date.now() + 13 * 86400000))] = [[720, 1140]];
+    return out;
+  }
+  function demoGameUse() {
+    var out = {};
+    out[isoOf(new Date(Date.now() + 6 * 86400000))] = [[510, 1020, ['Giant Jenga', 'Cornhole']]];
     return out;
   }
 
@@ -405,6 +449,7 @@
       state.games = DEMO_GAMES;
       state.dates = demoDates();
       state.bookedWindows = demoWindows();
+      state.gameUse = demoGameUse();
       return Promise.resolve();
     }
     var ctrl = new AbortController();
@@ -422,6 +467,9 @@
         state.minHire = data.minHireMinutes || 60;
         state.bookedWindows = data.bookedWindows || {};
         state.bufferMinutes = data.bufferMinutes || 60;
+        state.allowanceMinutes = typeof data.pickupAllowanceMinutes === 'number' ? data.pickupAllowanceMinutes : 60;
+        state.minDays = data.minDaysAhead || 1;
+        state.gameUse = data.gameUse || {};
         if (data.delivery && data.delivery.base > 0) { state.deliveryCfg = { base: data.delivery.base, stepMiles: data.delivery.stepMiles || 5, stepPrice: data.delivery.stepPrice || 10 }; }
         state.maxDaysAhead = data.maxDaysAhead || 540;
       })
@@ -574,13 +622,18 @@
     var single = limit === 1;
     var countEl = el('div', { class: 'pick-count', 'aria-live': 'polite' });
     var contBtn;
+    // Anything chosen earlier that is now booked out for these dates and times is dropped.
+    var before = state.sel.length + state.ext.length;
+    state.sel = state.sel.filter(itemFree);
+    state.ext = state.ext.filter(itemFree);
+    var dropped = before - state.sel.length - state.ext.length;
 
     function refresh() {
       var n = state.sel.length;
       countEl.textContent = n + ' of ' + limit + ' chosen';
       var full = n >= limit;
       Array.prototype.forEach.call(appEl.querySelectorAll('input[data-kind="pick"]'), function (inp) {
-        inp.disabled = !single && full && !inp.checked;
+        inp.disabled = inp.getAttribute('data-out') === '1' || (!single && full && !inp.checked);
       });
       if (contBtn) { contBtn.disabled = limit > 0 && n < 1; }
     }
@@ -589,9 +642,12 @@
       var isPick = kind === 'pick';
       var id = 'g-' + kind + '-' + idx;
       var list = isPick ? state.sel : state.ext;
+      var out = !itemFree(item.name);
       var input = el('input', {
         type: isPick && single ? 'radio' : 'checkbox',
         id: id, name: isPick && single ? 'choice' : id, 'data-kind': kind,
+        'data-out': out ? '1' : false,
+        disabled: out,
         checked: list.indexOf(item.name) !== -1,
         onchange: function (e) {
           if (isPick) {
@@ -608,7 +664,8 @@
         input,
         el('span', null,
           el('span', { class: 'opt-name' }, item.name),
-          item.note && el('span', { class: 'opt-note' }, item.note)
+          item.note && el('span', { class: 'opt-note' }, item.note),
+          out && el('span', { class: 'opt-note opt-out' }, 'Booked out for your date and times')
         ),
         item.price && el('span', { class: 'opt-price' }, item.price)
       );
@@ -618,11 +675,13 @@
 
     var view = el('div', { class: 'stack' },
       el('div', null,
-        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(prevStep('games')); } }, '← Change package'),
+        el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(prevStep('games')); } }, '← Change date or times'),
         heading(limit > 0 ? (single ? 'Make your choice' : 'Choose your games') : 'Extras'),
         el('p', { class: 'lede' }, p.name + ' (' + p.price + ')')
       ),
       limit > 0 && el('p', { class: 'lede' }, single ? 'Choose one.' : 'Choose up to ' + limit + ' games.'),
+      el('p', { class: 'hint' }, 'For ' + longDate(state.date) + '. Anything already booked out on your date and times is greyed out.'),
+      dropped > 0 && el('div', { class: 'note note--busy', role: 'status' }, dropped === 1 ? 'One of your earlier choices is booked out for these times, so we removed it.' : dropped + ' of your earlier choices are booked out for these times, so we removed them.'),
       limit > 0 && countEl,
       limit > 0 && (picks.length
         ? el('div', { class: 'opts' }, picks.map(function (it, i) { return option(it, 'pick', i); }))
@@ -692,6 +751,7 @@
       el('div', null,
         el('button', { type: 'button', class: 'btn-quiet', onclick: function () { go(prevStep('date')); } }, '← Back'),
         heading('Pick a date'),
+        el('p', { class: 'hint' }, 'Bookings start from tomorrow. Choose your date, then your set-up and pick-up times.'),
         el('p', { class: 'lede' }, p ? p.name + ' (' + p.price + ')' : '')
       ),
       el('div', { class: 'cal' },
@@ -725,7 +785,7 @@
       ),
       state.date && state.time && chosenStatus !== 'closed' && el('div', { class: 'field' },
         el('label', { for: 'f-pickup' }, 'Pick-up time'),
-        el('span', { class: 'hint', id: 'f-pickup-hint' }, 'The time you would like us to collect the games. It needs to be at least an hour after set-up.'),
+        el('span', { class: 'hint', id: 'f-pickup-hint' }, 'The time you would like us to collect the games, up to 8pm. It needs to be at least an hour after set-up. We allow an hour for collecting.'),
         el('select', { id: 'f-pickup', name: 'pickup', 'aria-describedby': 'f-pickup-hint', onchange: function (e) { state.pickup = e.target.value; render(true); } },
           el('option', { value: '', selected: !state.pickup }, 'Choose a time'),
           pickupChoices().map(function (v) {
@@ -735,6 +795,8 @@
       ),
       chosenStatus !== 'busy' && timeReview() && el('div', { class: 'note note--busy' },
         'Those times overlap another booking that day. You can still send a request and we will check whether it works and come back to you.'),
+      chosenStatus !== 'busy' && !timeReview() && state.time && state.pickup && includedShort() && el('div', { class: 'note note--busy' },
+        'Something in this package is already booked out for those times. You can still send a request and we will check and come back to you.'),
       el('div', { class: 'actions' },
         el('button', { type: 'button', class: 'btn btn-primary', disabled: !state.date || !state.time || !state.pickup, onclick: function () { go(nextStep('date')); } }, 'Continue')
       )
@@ -858,7 +920,7 @@
       el('div', null,
         heading('Check and send'),
         el('p', { class: 'lede' }, review
-          ? (reviewReason() === 'busy' ? 'This is a busy day, so we will check whether we can fit you in before confirming.' : 'That time is close to another booking, so we will check it works before confirming.')
+          ? (reviewReason() === 'busy' ? 'This is a busy day, so we will check whether we can fit you in before confirming.' : reviewReason() === 'stock' ? 'We will check that everything in your package is free on that day before confirming.' : 'Those times overlap another booking, so we will check it works before confirming.')
           : 'We will confirm your booking by email.')
       ),
       el('dl', { class: 'summary' },
@@ -889,7 +951,8 @@
               state.sending = false;
               if (res && res.ok) {
                 state.result = res.status === 'enquiry' ? 'enquiry' : 'provisional';
-                state.resultReason = res.reason === 'time' ? 'time' : 'busy';
+                state.resultReason = res.reason === 'time' ? 'time' : res.reason === 'stock' ? 'stock' : 'busy';
+                state.emailed = !!res.emailed;
                 go('done');
               } else {
                 state.sendError = (res && res.error) || 'Something went wrong. Please call or email us instead.';
@@ -909,23 +972,27 @@
 
   /* ---------- step: done ---------- */
   function viewDone() {
-    var busy = state.result === 'enquiry';
-    var timeOnly = busy && state.resultReason === 'time';
+    var enquiry = state.result === 'enquiry';
+    var why = state.resultReason;
     return el('div', { class: 'stack' },
-      heading(timeOnly ? 'Thanks, we will check that time' : busy ? 'Thanks, we will check that date' : 'Request received'),
-      el('p', { class: 'lede' }, timeOnly
-        ? 'That time is close to another booking, so we will check it works and come back to you by email.'
-        : busy
-        ? 'That day is busy, so we will see whether we can fit you in and come back to you by email.'
-        : 'We have noted ' + longDate(state.date) + ', set-up by ' + timeLabel(state.time) + ' and pick-up at ' + timeLabel(state.pickup) + ', and will confirm by email shortly.'),
+      heading(!enquiry ? 'Request received' : why === 'time' ? 'Thanks, we will check those times' : why === 'stock' ? 'Thanks, we will check availability' : 'Thanks, we will check that date'),
+      el('p', { class: 'lede' }, !enquiry
+        ? 'We have noted ' + longDate(state.date) + ', set-up by ' + timeLabel(state.time) + ' and pick-up at ' + timeLabel(state.pickup) + ', and will confirm by email shortly.'
+        : why === 'time'
+        ? 'Those times overlap another booking, so we will check they work and come back to you by email.'
+        : why === 'stock'
+        ? 'We need to check that everything in your package is free on that day, and will come back to you by email.'
+        : 'That day is busy, so we will see whether we can fit you in and come back to you by email.'),
+      state.emailed && el('p', null, 'We have also emailed you a copy of your request' + (state.form.email ? ' at ' + state.form.email : '') + '. If you do not see it, please check your junk folder.'),
       el('p', null, 'Nothing is final until we have confirmed with you. If anything changes, call ' + CONFIG.CONTACT_PHONE + ' or email ' + CONFIG.CONTACT_EMAIL + '.'),
-      DEMO && el('p', { class: 'hint' }, 'Demo mode: nothing was saved.'),
+      DEMO && el('p', { class: 'hint' }, 'Demo mode: nothing was saved and no email was sent.'),
       el('div', { class: 'actions' },
         el('button', {
           type: 'button', class: 'btn btn-primary',
           onclick: function () {
             state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.pickup = ''; state.errors = {}; state.sendError = '';
             state.delivery = { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 };
+            state.emailed = false;
             state.form = blankForm();
             go('package');
           }
