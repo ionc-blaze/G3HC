@@ -180,7 +180,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyjvov1xVtZ5XJBx1pCV1MPziq5gcJEDHCkeFYR_5jWyvJSfVxN0l7H1SyRJoHODqWU/exec',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -462,7 +462,7 @@
     }
     var ctrl = new AbortController();
     var timer = setTimeout(function () { ctrl.abort(); }, 20000);
-    return fetch(CONFIG.SCRIPT_URL, { signal: ctrl.signal })
+    return fetch(CONFIG.SCRIPT_URL, { signal: ctrl.signal, cache: 'no-store' })
       .then(function (res) { return res.json(); })
       .then(function (data) {
         if (!data || !data.ok || !Array.isArray(data.packages)) { throw new Error('bad data'); }
@@ -963,6 +963,8 @@
                 state.result = res.status === 'enquiry' ? 'enquiry' : 'provisional';
                 state.resultReason = res.reason === 'time' ? 'time' : res.reason === 'stock' ? 'stock' : 'busy';
                 state.emailed = !!res.emailed;
+                // Fetch the dates, times and stock again now, so the next request sees what has just been booked.
+                state.refreshing = load().then(function () { return true; }, function () { return false; });   // false: the button tries again
                 go('done');
               } else {
                 state.sendError = (res && res.error) || 'Something went wrong. Please call or email us instead.';
@@ -1004,7 +1006,10 @@
             state.delivery = { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 };
             state.emailed = false;
             state.form = blankForm();
-            go('package');
+            var fresh = state.refreshing || Promise.resolve(false);   // fetched when the request was sent
+            state.refreshing = null;
+            var again = function () { go('package'); };
+            fresh.then(function (ok) { return ok ? null : load().catch(function () { return null; }); }).then(again, again);
           }
         }, 'Make another request')
       )
