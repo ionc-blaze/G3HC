@@ -52,11 +52,25 @@ Settings tab, column A is the name, column B the value:
 | `SEND_CLIENT_EMAILS` | `yes` or `no`. Emails the customer when a request arrives and when you confirm it. |
 | `REPLY_TO_EMAIL` | Where customer replies go. Blank while testing, so replies go to the Google account running the script. Add the business email when going live. |
 | `ADMIN_KEY` | Secret for the private bookings page (see below). Clear it to switch the page off. |
+| `TELEGRAM_CHAT_ID` | Free Telegram alerts (see below). Blank = off. |
+| `TELEGRAM_BUTTONS` | `no` (default): the alert links to the booking in the Sheet. `yes`: it also has Confirm and Decline buttons (see below). |
 | `WHATSAPP_TO` | Your WhatsApp number, like `+447700900123`, for alerts (see below). Blank = off. |
-| `DELIVERY_BASE` | Delivery charge in pounds (default 80). Shown to the customer as information; not charged online. |
-| `DELIVERY_STEP_MILES` / `DELIVERY_STEP_PRICE` | Outside the M25, an estimated extra of this many pounds (default 10) for each started block of this many miles (default 5) beyond the M25. Only an estimate: it is shown to the customer and written in the Bookings sheet, but not charged online. |
+| `DELIVERY_BASE` | Delivery fee in pounds within the M25 (default 80). Shown on the page and quoted in the confirmation email. Nothing is taken online. |
+| `DELIVERY_STEP_MILES` / `DELIVERY_STEP_PRICE` | Outside the M25, an estimated extra of this many pounds (default 10) for each started block of this many miles (default 5) beyond the M25. Only an estimate: it is added to the delivery fee that is proposed when you confirm, and you can change that fee first. |
+| `HOLDING_DEPOSIT` | Non-refundable holding deposit in pounds (default 20). Paid up front to secure the date, only asked for once you are sure you can do the booking, and taken off the total. `0` means none. |
+| `REFUNDABLE_DEPOSIT_PERCENT` | Refundable deposit quoted when you confirm, as a percentage of the package price only (not extras or delivery). Default 50. `0` means no deposit. You refund it by hand after collection. |
+| `PAYMENT_NOTE` | A line under the amounts in the confirmation email, for example how to pay the holding deposit. Type `-` to leave it out. |
 
 Packages tab: edit names, descriptions, prices; changes appear on the page straight away. Keep each Package ID unique.
+
+## What you can edit (the colours)
+
+`setupSheet` colours the Sheet so it is clear what is yours to change:
+
+- **Green tab or green cells: yours to edit.** The Packages and Games tabs, the Value column of Settings, the Status column on Bookings and the three money columns on the right of Bookings (Hire price, Delivery fee, Refundable deposit).
+- **Grey tab or grey cells: filled in by the script or by formulas, please do not edit.** The Dashboard and This week tabs, the Name column of Settings and its explanations, and every other Bookings column (customer details, event ID, pick-up time, postcode, delivery estimate, client emails and stock items).
+- The Bookings tab has an amber tab colour because it is half and half.
+- Typing in a grey area shows a warning ("Filled in by the script") but is not blocked, so nothing stops you if you really mean it. Hover over cell A1 on Bookings or Settings for the colour key.
 
 ## The Sheet tabs
 
@@ -97,7 +111,7 @@ Customers enter the venue postcode. The script looks it up on postcodes.io (free
 
 ## Set-up time, pick-up time and the calendar
 
-Customers choose a **set-up time** (every half hour, 7:00 am to 6:00 pm) and a **pick-up time** (8:00 am to 8:00 pm, at least an hour after set-up). The earliest date is tomorrow. The pick-up time is saved in the Bookings sheet (column O, "Pick-up time").
+Customers choose a **set-up time** (every half hour, 7:00 am to 6:00 pm) and a **pick-up time** (8:00 am to 8:00 pm, at least an hour after set-up). The earliest date is tomorrow. The pick-up time is saved in the Bookings sheet ("Pick-up time" column).
 
 - Each request creates a **timed calendar event** from an hour before set-up until an hour after pick-up (`BUFFER_MINUTES`, `PICKUP_ALLOWANCE_MINUTES`). The title reads like `PROVISIONAL set-up 11:00, pick-up 17:00: Package Two - Alex Smith`.
 - Only bookings with Status `Provisional` or `Confirmed` hold time and stock. Enquiries, `Declined` and `Cancelled` hold nothing.
@@ -108,11 +122,24 @@ Customers choose a **set-up time** (every half hour, 7:00 am to 6:00 pm) and a *
 
 ## Confirming a booking
 
-In the **Bookings** tab the **Status** column is a drop-down: Provisional, Time review, Busy day enquiry, Stock review, Confirmed, Declined, Cancelled (coloured to match).
+The order is deliberate: look along the row, check or change the three money columns (S to U), and only then choose the Status in the last column. Choosing **Confirmed** is what sends the customer their email with those amounts.
 
-- Choose **Confirmed**: the calendar event is renamed `CONFIRMED set-up ...` and turns green, and the customer gets a "your booking is confirmed" email (once only, even if you change the Status again).
-- **Declined** or **Cancelled**: the event is renamed and turns grey, it stops holding time and stock, and no email is sent (ring or email the customer yourself).
+In the **Bookings** tab the **Status** column (the last one, column V, after the prices) is a drop-down: Provisional, Time review, Busy day enquiry, Stock review, Confirmed, Declined, Cancelled (coloured to match).
+
+- Choose **Confirmed**: the calendar event is renamed `CONFIRMED set-up ...` and turns green, and the customer gets a "your booking is confirmed" email with the amounts (once only, even if you change the Status again).
+- **Declined**: the event is renamed and turns grey, it stops holding time and stock, and the customer gets one polite decline email.
+- **Cancelled**: the event is renamed and turns grey and it stops holding time and stock. No email is sent (ring or email the customer yourself).
+- If your Sheet is from an earlier version with Status in column M, the script moves it to the end by itself the first time it runs (the Status drop-down, colours and Dashboard formulas move with it).
 - Changing Status by editing the cell in the Sheet is what triggers this. Changes made on a phone through the Sheets app work too, but can take a few seconds.
+- You can do the same from Telegram with one tap (see below).
+
+### The amounts
+
+Every request gets three money columns on the right of the Bookings tab: **Hire price** (package plus any extras), **Delivery fee** (the base fee, plus the estimated distance charge outside the M25) and **Refundable deposit** (`REFUNDABLE_DEPOSIT_PERCENT` of the package price). The confirmation email quotes them with the total hire cost, the `HOLDING_DEPOSIT` (taken off the total) and the balance after it. The 50% refundable deposit is still to be confirmed with Troy. A "from" priced extra such as the candy cart is counted at its "from" price, and the Telegram confirm screen warns you to check the hire price. Type over any of them in the Sheet (or use the Telegram buttons) before you confirm and the email quotes your figure. Nothing is taken online.
+
+## Days when you are not taking bookings
+
+The **Days off** tab (created by `setupSheet`, green tab) lists dates you are not available. Type the first day in **From date**; for a run of days also type the last day in **To date**; leave To date blank for a single day. The third column is a private reason for your own notes, and customers never see it. Blocked dates are greyed out on the booking page and the script refuses them too. Past dates are ignored. Bookings already made on those dates are not changed, so check the calendar yourself. Delete a row to open the dates again. This blocks whole days only, not part of a day.
 
 ## Emails to the customer
 
@@ -131,12 +158,26 @@ The Games tab has an **In stock** column. Blank means the item is not counted. A
 ## Seeing what is coming up
 
 - **This week** tab (made by `setupSheet`): what is waiting for your decision, the next 7 days, the newest requests and the most booked games. It refreshes when a booking arrives, when a Status changes, and every morning. The existing **Dashboard** tab (income and months) is untouched.
-- **Private bookings page:** the same information as a web page. The link is the Web app URL followed by `?page=admin&key=` and the `ADMIN_KEY` from Settings. `setupSheet` logs the full link and the owner alert email includes it once `ADMIN_KEY` is set. Anyone with the link can see customer names and phone numbers, so keep it private, and clear `ADMIN_KEY` to switch it off. It is read-only: confirm bookings in the Sheet.
+- **Private bookings page:** a summary only: counts, what is waiting, the next 7 days, newest requests and most booked games, each row with an **Open in Sheet** link that jumps to that booking's row. It shows no names, phone numbers or emails, so the detail stays behind your Google login. The link is the Web app URL followed by `?page=admin&key=` and the `ADMIN_KEY` from Settings (`setupSheet` logs it, and the owner alert email includes it). Clear `ADMIN_KEY` to switch the page off. It is read-only: confirm bookings in the Sheet. The **This week** tab inside the Sheet does show names and phone numbers, because the Sheet is already private.
 
 ## Alerts when a booking comes in
 
 - **Email:** put your address in `NOTIFY_EMAIL`. Leave it blank while testing.
-- **WhatsApp (optional):** WhatsApp has no simple free route for a script. The script can send through Twilio's WhatsApp service. You need a Twilio account, then add `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_WHATSAPP_FROM` in Apps Script > Project Settings > Script properties, and your number in `WHATSAPP_TO`. This part has not been tested against a real Twilio account. Twilio's sandbox needs the recipient to opt in first, and a live business number needs WhatsApp's approval of the message template. Twilio and WhatsApp charge per message; check their current prices.
+- **Telegram (free, recommended):** no cost and no business account.
+  1. In Telegram, message **@BotFather**, send `/newbot` and follow the prompts. It gives you a token.
+  2. In Apps Script > Project Settings > Script properties, add `TELEGRAM_BOT_TOKEN` with that token.
+  3. Open your new bot in Telegram and send it any message (for Troy, he does this from his own Telegram).
+  4. In Apps Script choose **telegramFindChatId** and **Run**. The Logs show your chat id.
+  5. Put that number in `TELEGRAM_CHAT_ID` in the Settings tab. New requests now arrive as a Telegram message. To alert two people, make a Telegram group with both of them and the bot, send a message in it, run `telegramFindChatId` again and use the group's id (it starts with a minus).
+  This has been tested against a mock of Telegram, not a real bot yet.
+- **Link to the booking:** each Telegram alert (and the owner email) includes a link that opens the Sheet at that booking's row, where you change the Status to Confirmed or Declined.
+- **Confirm and decline buttons (optional, off by default):** set `TELEGRAM_BUTTONS` to `yes` in the Settings tab, and after the steps above, choose **setupTelegramBot** in Apps Script and **Run** (once, after the web app has been deployed as a New version). Each new request then arrives with **Confirm** and **Decline** buttons.
+  - **Confirm** first shows the hire price, delivery fee, refundable deposit and total. Tap **Send confirmation** to confirm (the Sheet, calendar and customer email all update), or **Change hire price**, **Change delivery fee** or **Change refundable deposit**, reply with a number in pounds, and check the new total.
+  - **Decline** asks "are you sure" first. **Yes, decline** marks the Sheet and calendar and emails the customer.
+  - If `setupTelegramBot` says the web app address does not end in `/exec` (the editor reports the test address), add a Script property called `WEB_APP_URL` with the **Web app URL** from Deploy > Manage deployments, then run it again.
+  - Send `/waiting` to the bot to list everything still waiting for a decision, each with the same buttons.
+  - Only your chat is obeyed. While the buttons are on, `telegramFindChatId` will not work (Telegram only allows one way of listening). Run **stopTelegramBot** first if you ever need it again.
+- **WhatsApp (optional, not free):** WhatsApp has no free route for a script. The script can send through Twilio's WhatsApp service. You need a Twilio account, then add `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_WHATSAPP_FROM` in Script properties, and your number in `WHATSAPP_TO`. Not tested against a real Twilio account. Twilio and WhatsApp charge per message, and a live number needs WhatsApp's approval of the message wording.
 - **No extra setup alternative:** the calendar event can notify a phone if Troy's Google account is invited to it or subscribes to the calendar, with a phone reminder.
 
 ## Day to day

@@ -180,7 +180,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyjvov1xVtZ5XJBx1pCV1MPziq5gcJEDHCkeFYR_5jWyvJSfVxN0l7H1SyRJoHODqWU/exec',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -276,6 +276,7 @@
     pickupSlots: [],
     minHire: 60,
     bookedWindows: {},
+    blocked: {},
     gameUse: {},
     bufferMinutes: 60,
     allowanceMinutes: 60,
@@ -329,7 +330,7 @@
   // The earliest date that can be booked: tomorrow by default, never today.
   function minIso() { return isoOf(new Date(Date.now() + Math.max(state.minDays, 1) * 86400000)); }
   function dayStatus(s) {
-    if (s < minIso() || s > maxIso()) { return 'closed'; }
+    if (s < minIso() || s > maxIso() || state.blocked[s]) { return 'closed'; }
     return (state.dates[s] || 0) >= state.busyThreshold ? 'busy' : 'open';
   }
   function slotValues() {
@@ -430,6 +431,12 @@
     });
     return out;
   }
+  // Demo mode: a few days the owner is not taking bookings.
+  function demoBlocked() {
+    var out = {};
+    [40, 41, 42].forEach(function (offset) { out[isoOf(new Date(Date.now() + offset * 86400000))] = true; });
+    return out;
+  }
   function demoWindows() {
     var out = {};
     // 9:30 set-up to 4pm pick-up already booked one day, so from 8:30 to 4pm is held.
@@ -449,6 +456,7 @@
       state.games = DEMO_GAMES;
       state.dates = demoDates();
       state.bookedWindows = demoWindows();
+      state.blocked = demoBlocked();
       state.gameUse = demoGameUse();
       return Promise.resolve();
     }
@@ -466,6 +474,8 @@
         state.pickupSlots = Array.isArray(data.pickupSlots) ? data.pickupSlots : [];
         state.minHire = data.minHireMinutes || 60;
         state.bookedWindows = data.bookedWindows || {};
+        state.blocked = {};
+        (Array.isArray(data.blockedDates) ? data.blockedDates : []).forEach(function (d) { state.blocked[d] = true; });
         state.bufferMinutes = data.bufferMinutes || 60;
         state.allowanceMinutes = typeof data.pickupAllowanceMinutes === 'number' ? data.pickupAllowanceMinutes : 60;
         state.minDays = data.minDaysAhead || 1;
