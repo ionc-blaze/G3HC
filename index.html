@@ -136,6 +136,7 @@
   .site-footer a { color: #fff; }
   .site-footer p { margin: 4px 0; overflow-wrap: anywhere; }
   .site-footer .small { font-size: 16px; opacity: 0.85; margin-top: 14px; }
+  .site-footer .credit { margin-top: 6px; }
 
   @media (max-width: 640px) {
     .panel { padding: 22px 16px 26px; }
@@ -167,6 +168,7 @@
 <footer class="site-footer">
   <p id="contact"></p>
   <p class="small">&copy; The Giant Garden Games Hire Company</p>
+  <p class="small credit">Booking system created by <a href="https://ionconsultancyltd.com" target="_blank" rel="noopener">ION Consultancy Ltd</a></p>
 </footer>
 
 <script>
@@ -179,7 +181,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyjvov1xVtZ5XJBx1pCV1MPziq5gcJEDHCkeFYR_5jWyvJSfVxN0l7H1SyRJoHODqWU/exec',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -235,11 +237,12 @@
     { key: 'name', label: 'Your name', type: 'text', required: true, max: 100, autocomplete: 'name' },
     { key: 'email', label: 'Email', type: 'email', required: true, max: 120, autocomplete: 'email' },
     { key: 'phone', label: 'Phone', type: 'tel', required: true, max: 40, autocomplete: 'tel' },
-    { key: 'venue', label: 'Venue address', type: 'textarea', rows: 3, required: true, max: 300, hint: 'Please include the postcode.' },
+    { key: 'venue', label: 'Venue address', type: 'textarea', rows: 3, required: true, max: 300, hint: 'Street address and town.' },
+    { key: 'postcode', label: 'Venue postcode', type: 'text', required: true, max: 10, autocomplete: 'postal-code', hint: 'We use this to work out delivery.' },
     { key: 'access', label: 'Parking and access', type: 'textarea', rows: 2, max: 400, hint: 'Anything we should know about parking, stairs or entry.' }
   ];
 
-  function blankForm() { return { name: '', email: '', phone: '', venue: '', access: '', invoice: false, terms: false, hp: '' }; }
+  function blankForm() { return { name: '', email: '', phone: '', venue: '', postcode: '', access: '', invoice: false, terms: false, hp: '' }; }
 
   var state = {
     step: 'package',
@@ -263,6 +266,9 @@
     sending: false,
     sendError: '',
     result: '',
+    deliveryCfg: { base: 80, stepMiles: 5, stepPrice: 10 },
+    refundPct: 50,
+    delivery: { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 },
     resultReason: '',
     payments: { enabled: false, depositPercent: 100 },
     payUrl: '',
@@ -368,6 +374,11 @@
         if (ep) { lines.push({ name: name, pence: ep }); } else { unpriced.push(name + (item && item.price ? ' (' + item.price + ')' : '')); }
       });
     }
+    lines.push({ name: 'Delivery', pence: state.deliveryCfg.base * 100 });
+    var pkgP = p ? pence(p.price) : null;
+    if (pkgP && state.refundPct > 0) {
+      lines.push({ name: 'Refundable deposit (' + state.refundPct + '% of package)', pence: Math.round(pkgP * state.refundPct / 100), refundable: true });
+    }
     var subtotal = lines.reduce(function (t, l) { return t + l.pence; }, 0);
     var pct = state.payments.depositPercent;
     return { lines: lines, unpriced: unpriced, subtotal: subtotal, due: pct >= 100 ? subtotal : Math.round(subtotal * pct / 100), pct: pct };
@@ -413,12 +424,52 @@
         state.slots = Array.isArray(data.slots) ? data.slots : [];
         state.reviewTimes = data.reviewTimes || {};
         state.bufferMinutes = data.bufferMinutes || 60;
+        if (typeof data.refundableDepositPercent === 'number') { state.refundPct = Math.min(Math.max(data.refundableDepositPercent, 0), 100); }
+        if (data.delivery && data.delivery.base > 0) { state.deliveryCfg = { base: data.delivery.base, stepMiles: data.delivery.stepMiles || 5, stepPrice: data.delivery.stepPrice || 10 }; }
         state.maxDaysAhead = data.maxDaysAhead || 540;
         if (data.payments && data.payments.enabled) {
           state.payments = { enabled: true, depositPercent: Math.min(Math.max(parseInt(data.payments.depositPercent, 10) || 100, 1), 100) };
         }
       })
       .finally(function () { clearTimeout(timer); });
+  }
+
+  /* ---------- delivery estimate ---------- */
+  function demoQuote(pc) {
+    if (/^(E|EC|N|NW|SE|SW|W|WC|BR|CR|DA|EN|HA|IG|KT|RM|SM|TW|UB|WD)[0-9]/.test(pc)) { return { ok: true, known: true, inside: true, milesBeyond: 0, extra: 0 }; }
+    var sum = 0; for (var i = 0; i < pc.length; i++) { sum += pc.charCodeAt(i); }
+    var miles = 8 + (sum % 25);
+    return { ok: true, known: true, inside: false, milesBeyond: miles, extra: Math.ceil(miles / state.deliveryCfg.stepMiles) * state.deliveryCfg.stepPrice };
+  }
+  function requestDelivery() {
+    var pc = cleanPostcode(state.form.postcode);
+    if (state.delivery.postcode === pc && state.delivery.status !== 'error' && state.delivery.status !== 'idle') { return; }
+    state.delivery = { status: 'loading', postcode: pc, inside: true, miles: 0, extra: 0 };
+    var done = function (q) {
+      if (state.delivery.postcode !== pc) { return; }
+      if (q && q.ok && q.known) {
+        state.delivery = { status: q.inside ? 'inside' : 'outside', postcode: pc, inside: !!q.inside, miles: q.milesBeyond || 0, extra: q.extra || 0 };
+      } else {
+        state.delivery = { status: 'unknown', postcode: pc, inside: false, miles: 0, extra: 0 };
+      }
+      if (state.step === 'review' && !state.sending) { render(true); }
+    };
+    if (DEMO) { setTimeout(function () { done(demoQuote(pc)); }, 300); return; }
+    var url = CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + 'action=quote&postcode=' + encodeURIComponent(pc);
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 15000);
+    fetch(url, { signal: ctrl.signal }).then(function (res) { return res.json(); }).then(done)
+      .catch(function () { done(null); }).finally(function () { clearTimeout(timer); });
+  }
+  function deliveryNote() {
+    var d = state.delivery, cfg = state.deliveryCfg, base = money(cfg.base * 100);
+    var text;
+    if (d.status === 'loading') { text = 'Working out your delivery cost...'; }
+    else if (d.status === 'inside') { text = 'Delivery within the M25 is ' + base + '.'; }
+    else if (d.status === 'outside') {
+      text = 'Delivery is ' + base + ', plus an estimated ' + money(d.extra * 100) + ' for the roughly ' + Math.round(d.miles) + ' miles your venue is beyond the M25. We will confirm the exact cost with you, and the extra distance is not charged online.';
+    } else { text = 'Delivery is ' + base + '. We could not place that postcode automatically, so we will confirm any extra distance charge with you.'; }
+    return el('p', { class: 'hint', 'aria-live': 'polite' }, text);
   }
 
   /* ---------- sending ---------- */
@@ -433,6 +484,7 @@
       email: f.email,
       phone: f.phone,
       venue: f.venue,
+      postcode: cleanPostcode(f.postcode),
       terms: f.terms
     };
     // Optional parts are only sent when filled in, which keeps the request short.
@@ -498,7 +550,7 @@
     return el('div', { class: 'stack' },
       el('div', null,
         heading('Choose a package'),
-        el('p', { class: 'lede' }, 'Prices are for one day’s hire. Delivery is not included and is confirmed separately.')
+        el('p', { class: 'lede' }, 'Prices are for one day’s hire. Delivery is added at the end: £' + state.deliveryCfg.base + ' within the M25, a little more beyond it.')
       ),
       el('div', { class: 'pkgs' }, state.packages.map(function (p) {
         return el('button', {
@@ -682,6 +734,12 @@
   }
 
   /* ---------- step: details ---------- */
+  function cleanPostcode(v) {
+    var s = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return /^[A-Z]{1,2}[0-9][A-Z0-9]?[0-9][A-Z]{2}$/.test(s) ? s.slice(0, s.length - 3) + ' ' + s.slice(-3) : '';
+  }
+  function isPostcode(v) { return !!cleanPostcode(v); }
+
   function validateForm() {
     var errs = {};
     var f = state.form;
@@ -689,6 +747,7 @@
       if (def.required && !String(f[def.key]).trim()) { errs[def.key] = 'Please fill this in.'; }
     });
     if (!errs.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) { errs.email = 'Please enter a valid email address.'; }
+    if (!errs.postcode && !isPostcode(f.postcode)) { errs.postcode = 'Please enter a valid UK postcode, for example E1 1AA.'; }
     if (!f.terms) { errs.terms = 'Please confirm you accept the terms and conditions.'; }
     return errs;
   }
@@ -735,6 +794,7 @@
           if (firstBad) { firstBad.focus(); }
           return;
         }
+        requestDelivery();
         go(nextStep('details'));
       }
     },
@@ -793,6 +853,8 @@
         el('div', { class: 'basket-total' }, el('dt', null, 'To pay online'), el('dd', null, money(b.due)))
       ),
       b.unpriced.length > 0 && el('p', { class: 'hint' }, 'Not included in this total, price confirmed separately: ' + b.unpriced.join(', ') + '.'),
+      state.delivery.status === 'outside' && el('p', { class: 'hint' }, 'Extra distance beyond the M25 (about ' + money(state.delivery.extra * 100) + ') is not in this total. We will confirm it with you.'),
+      b.lines.some(function (l) { return l.refundable; }) && el('p', { class: 'hint' }, 'The refundable deposit is returned to you after we have collected the games.'),
       el('p', { class: 'hint' }, 'After you send your request you will be taken to a secure card payment page.')
     );
   }
@@ -820,7 +882,8 @@
       content.push(el('p', { class: 'hint' }, 'Demo mode: this was a practice payment. No card was used and nothing was saved.'));
       content.push(el('div', { class: 'actions' }, el('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
         state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.errors = {}; state.sendError = '';
-        state.payUrl = ''; state.payAmount = ''; state.form = blankForm(); go('package');
+        state.payUrl = ''; state.payAmount = ''; state.form = blankForm();
+        state.delivery = { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 }; go('package');
       } }, 'Start again')));
     }
     return el('div', { class: 'stack' }, content);
@@ -887,15 +950,16 @@
         row('Email', f.email),
         row('Phone', f.phone),
         row('Venue', f.venue),
+        row('Postcode', cleanPostcode(f.postcode) || f.postcode),
         row('Parking and access', f.access),
         row('Invoice needed', f.invoice ? 'Yes' : 'No')
       ),
       basketView(review),
-      el('p', { class: 'hint' }, 'Delivery is not included in the package price. It starts from £80 in the London area and we will confirm the exact cost.'),
+      deliveryNote(),
       state.sendError && el('div', { class: 'form-error', role: 'alert' }, state.sendError),
       el('div', { class: 'actions' },
         el('button', {
-          type: 'button', class: 'btn btn-primary', disabled: state.sending,
+          type: 'button', class: 'btn btn-primary', disabled: state.sending || state.delivery.status === 'loading',
           onclick: function () {
             state.sending = true;
             state.sendError = '';
@@ -951,6 +1015,7 @@
           type: 'button', class: 'btn btn-primary',
           onclick: function () {
             state.pkgId = ''; state.sel = []; state.ext = []; state.date = ''; state.time = ''; state.errors = {}; state.sendError = '';
+            state.delivery = { status: 'idle', postcode: '', inside: true, miles: 0, extra: 0 };
             state.payUrl = ''; state.payAmount = '';
             try { history.replaceState(null, '', location.pathname); } catch (e) { /* not important */ }
             state.form = blankForm();
