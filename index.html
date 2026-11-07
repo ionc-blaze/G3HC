@@ -180,7 +180,7 @@
   var CONFIG = {
     // Paste the Apps Script web app address between the quotes.
     // Leave it empty to run in demo mode with sample data.
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyjvov1xVtZ5XJBx1pCV1MPziq5gcJEDHCkeFYR_5jWyvJSfVxN0l7H1SyRJoHODqWU/exec',
+    SCRIPT_URL: '',
 
     TERMS_URL: 'https://www.thegiantgardengameshirecompany.co.uk/_files/ugd/0ad932_9e1222cc39cf477b93c71a24f4219bf5.pdf',
     CONTACT_EMAIL: 'info@thegiantgardengameshirecompany.co.uk',
@@ -222,10 +222,10 @@
   var DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   var STEP_LABELS = { package: 'Package', games: 'Games', date: 'Date', details: 'Details', review: 'Review' };
 
-  // Arrival times, every half hour from 7am to 6pm.
+  // Arrival times, every half hour from 6am to 6pm.
   var TIME_OPTIONS = (function () {
     var out = [];
-    for (var h = 7; h <= 18; h++) {
+    for (var h = 6; h <= 18; h++) {
       [0, 30].forEach(function (m) {
         if (h === 18 && m === 30) { return; }
         var hh = h > 12 ? h - 12 : h;

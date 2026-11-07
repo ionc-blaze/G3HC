@@ -111,7 +111,7 @@ Customers enter the venue postcode. The script looks it up on postcodes.io (free
 
 ## Set-up time, pick-up time and the calendar
 
-Customers choose a **set-up time** (every half hour, 7:00 am to 6:00 pm) and a **pick-up time** (8:00 am to 8:00 pm, at least an hour after set-up). The earliest date is tomorrow. The pick-up time is saved in the Bookings sheet ("Pick-up time" column).
+Customers choose a **set-up time** (every half hour, 6:00 am to 6:00 pm) and a **pick-up time** (8:00 am to 8:00 pm, at least an hour after set-up). The earliest date is tomorrow. The pick-up time is saved in the Bookings sheet ("Pick-up time" column).
 
 - Each request creates a **timed calendar event** from an hour before set-up until an hour after pick-up (`BUFFER_MINUTES`, `PICKUP_ALLOWANCE_MINUTES`). The title reads like `PROVISIONAL set-up 11:00, pick-up 17:00: Package Two - Alex Smith`.
 - Only bookings with Status `Provisional` or `Confirmed` hold time and stock. Enquiries, `Declined` and `Cancelled` hold nothing.
@@ -127,8 +127,10 @@ The order is deliberate: look along the row, check or change the three money col
 In the **Bookings** tab the **Status** column (the last one, column V, after the prices) is a drop-down: Provisional, Time review, Busy day enquiry, Stock review, Confirmed, Declined, Cancelled (coloured to match).
 
 - Choose **Confirmed**: the calendar event is renamed `CONFIRMED set-up ...` and turns green, and the customer gets a "your booking is confirmed" email with the amounts (once only, even if you change the Status again).
-- **Declined**: the event is renamed and turns grey, it stops holding time and stock, and the customer gets one polite decline email.
-- **Cancelled**: the event is renamed and turns grey and it stops holding time and stock. No email is sent (ring or email the customer yourself).
+- **Declined**: the calendar entry is deleted and the Event ID cell says so, the booking stops holding time and stock, and the customer gets one polite decline email. Changing it back to Provisional or Confirmed puts the calendar entry back.
+- **Cancelled**: the calendar entry is deleted, the Event ID cell says so, and the booking stops holding time and stock. No email is sent (ring or email the customer yourself). If you change a cancelled booking back to Provisional or Confirmed, its calendar entry is put back.
+- **Speed:** when a request comes in, the customer is answered as soon as the booking row is saved. The calendar entry, the customer's email, your alerts (email, Telegram, WhatsApp) and the dashboard refresh follow a second or two later from a one-off background trigger, so the Event ID cell fills in just after the row appears. Settings, Packages and Games are kept for a minute to save re-reading them, and any edit you make in the Sheet clears that straight away. If the page says an email is on its way and it later fails, the Client emails cell says so.
+- **Deleting a row** in the Bookings tab (right-click the row number, Delete row) also deletes that booking's calendar entry. Only entries the script made are ever removed; anything you added to the calendar by hand is left alone. Bookings made before this feature are covered once you have run `setupSheet` again. Deleting a row frees its time and stock, and nothing is emailed.
 - If your Sheet is from an earlier version with Status in column M, the script moves it to the end by itself the first time it runs (the Status drop-down, colours and Dashboard formulas move with it).
 - Changing Status by editing the cell in the Sheet is what triggers this. Changes made on a phone through the Sheets app work too, but can take a few seconds.
 - You can do the same from Telegram with one tap (see below).
@@ -137,9 +139,13 @@ In the **Bookings** tab the **Status** column (the last one, column V, after the
 
 Every request gets three money columns on the right of the Bookings tab: **Hire price** (package plus any extras), **Delivery fee** (the base fee, plus the estimated distance charge outside the M25) and **Refundable deposit** (`REFUNDABLE_DEPOSIT_PERCENT` of the package price). The confirmation email quotes them with the total hire cost, the `HOLDING_DEPOSIT` (taken off the total) and the balance after it. The 50% refundable deposit is still to be confirmed with Troy. A "from" priced extra such as the candy cart is counted at its "from" price, and the Telegram confirm screen warns you to check the hire price. Type over any of them in the Sheet (or use the Telegram buttons) before you confirm and the email quotes your figure. Nothing is taken online.
 
+## Dates and time zone
+
+Every date people see is in UK order (dd/mm/yyyy, or "Thursday 19 November 2026" in emails and on the page). `setupSheet` sets the Sheet's locale to United Kingdom and its time zone to London, which also makes the date pickers and the way you type dates UK style. It rewrites any `yyyy-mm-dd` dates saved by earlier versions in the Received, Event date and Client emails columns, and updates the month rows on the Dashboard to match. The calendar events and the 6am daily refresh use London time whatever time zone the Apps Script project is set to.
+
 ## Days when you are not taking bookings
 
-The **Days off** tab (created by `setupSheet`, green tab) lists dates you are not available. Type the first day in **From date**; for a run of days also type the last day in **To date**; leave To date blank for a single day. The third column is a private reason for your own notes, and customers never see it. Blocked dates are greyed out on the booking page and the script refuses them too. Past dates are ignored. Bookings already made on those dates are not changed, so check the calendar yourself. Delete a row to open the dates again. This blocks whole days only, not part of a day.
+The **Days off** tab (created by `setupSheet`, green tab) lists dates you are not available. Click a cell in **From date** (double-click for the calendar picker, or type it like 25/12/2026); for a run of days also pick the last day in **To date**; leave To date blank for a single day. The third column is a private reason for your own notes, and customers never see it. Blocked dates are greyed out on the booking page and the script refuses them too. Past dates are ignored. Bookings already made on those dates are not changed, so check the calendar yourself. Delete a row to open the dates again. This blocks whole days only, not part of a day.
 
 ## Emails to the customer
 
